@@ -2,7 +2,7 @@ require('dotenv').config();
 const token = process.env.BOT_TOKEN;
 const Discord = require('discord.js');
 const client = new Discord.Client();
-import CommandSession from "./CommandSession"; 
+const CommandSession = require("./CommandSession.js"); 
 
 const COMMANDS = Object.freeze({
   "hi": (props, user, channel, msg) => {
@@ -12,7 +12,14 @@ const COMMANDS = Object.freeze({
     channel.send(props.join(" "));
   },
   "start": (props, user, channel, msg) => {
-    CommandSession.create(channel, [], 10);
+    const s = CommandSession.create(channel, [], 10);
+    s.onTimeout(s => {
+      s.channel.send("Command Session Timeout!");
+    });
+
+    s.onMsg(s => {
+      s.channel.send("Session Command");
+    });
   }
 });
 
@@ -27,7 +34,7 @@ const parseCommand = msg => {
     try {
       COMMANDS[command](props, msg.author, msg.channel, msg);
     } catch(e) {
-      console.log("Error running command: " + command + " Error: " + e + " MSG: " + msg);
+      console.log("Error running command: " + command + " Error: " + e + " MSG ID: " + msg);
     }
   }
 };

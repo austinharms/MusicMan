@@ -61,7 +61,7 @@ CommandSession.prototype.stop = function() {
   CommandSession.remove(this.id);
 };
 
-CommandSession.Timeout = function() {
+CommandSession.prototype.Timeout = function() {
   if (this.timeoutFunc !== null) this.timeoutFunc(this);
 };
 
@@ -70,4 +70,4 @@ CommandSession.prototype.resetTimeout = function() {
   this.timeoutTimer = setTimeout(this.Timeout.bind(this), this.timeoutDuration * 1000);
 };
 
-export default CommandSession;
+module.exports = CommandSession;
