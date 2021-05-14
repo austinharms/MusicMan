@@ -33,9 +33,14 @@ const COMMANDS = Object.freeze({
     const messages = [];
     for (let i = 0; i < count; ++i) messages.push(channel.send(`<@${tag}>`));
     channel.bulkDelete([...(await Promise.all(messages)), msg]);
-  }
-});
+  },
+  "bping": async (props, user, channel, msg) => {
+    const tag = (props.length === 0 || isNaN(props[0]))?user.id:props[0];
+    const count = (props.length > 1 && !isNaN(props[1]))?parseInt(props[1]):1;
+    for (let i = 0; i < count; ++i) channel.send(`<@${tag}>`);
+  },
 
+});
 
 const parseCommand = msg => {
   if (!msg.content.startsWith(PREFIX)) return;
