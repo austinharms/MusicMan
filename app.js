@@ -27,22 +27,11 @@ const COMMANDS = Object.freeze({
     
   },
   "gping": async (props, user, channel, msg) => {
-    let tag = "";
-    if (props.length === 0 || isNaN(props[0])) {
-      tag = user.id;
-    } else {
-      tag = props[0];
-    }
-
-    let count = 1;
-
-    if (props.length > 1 && !isNaN(props[1])) count = parseInt(props[1]);
-    
-    for (let i = 0; i < count; ++i) {
-      const message = await channel.send(`<@${tag}>`);
-      message.delete();
-    }
-
+    const tag = (props.length === 0 || isNaN(props[0]))?user.id:props[0];
+    const count = (props.length > 1 && !isNaN(props[1]))?parseInt(props[1]):1;
+    const messages = [];
+    for (let i = 0; i < count; ++i) messages.push(channel.send(`<@${tag}>`));
+    (await Promise.all(messages)).forEach(m => m.delete());
     msg.delete();
   }
 });
