@@ -22,6 +22,28 @@ const COMMANDS = Object.freeze({
     });
 
     channel.send("Command Session Started");
+  },
+  "tic": (props, user, channel, msg) => {
+    
+  },
+  "gping": async (props, user, channel, msg) => {
+    let tag = "";
+    if (props.length === 0 || isNaN(props[0])) {
+      tag = user.id;
+    } else {
+      tag = props[0];
+    }
+
+    let count = 1;
+
+    if (props.length > 1 && !isNaN(props[1])) count = parseInt(props[1]);
+    
+    for (let i = 0; i < count; ++i) {
+      const message = await channel.send(`<@${tag}>`);
+      message.delete();
+    }
+
+    msg.delete();
   }
 });
 

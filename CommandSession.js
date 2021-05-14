@@ -22,7 +22,6 @@ CommandSession.getSessions = function() {
 CommandSession.create = function(...prams) {
   const s = new CommandSession(...prams);
   this.sessions.push(s);
-  console.log("Created", this);
   return s;
 };
 
@@ -37,7 +36,6 @@ CommandSession.sendSessionMsg = function(msg) {
 };
 
 CommandSession.prototype.checkForSession = function(msg) {
-  console.log(msg.channel.id === this.channel.id, this.users.length === 0, this.users.find(user => user.id.equals(msg.author.id)));
   if (this.channel !== null)
     return msg.channel.id === this.channel.id && (this.users.length === 0 || this.users.find(user => user.id.equals(msg.author.id)));
   else
@@ -59,7 +57,7 @@ CommandSession.prototype.sendMsg = function(msg) {
 
 CommandSession.prototype.stop = function() {
   clearTimeout(this.timeoutTimer);
-  this.remove(this.id);
+  CommandSession.remove(this.id);
 };
 
 CommandSession.prototype.Timeout = function() {
