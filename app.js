@@ -1,5 +1,6 @@
 require('dotenv').config();
-const token = process.env.BOT_TOKEN;
+const TOKEN = process.env.BOT_TOKEN;
+const PREFIX = process.env.CMD_PREFIX;
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const CommandSession = require("./CommandSession.js"); 
@@ -31,15 +32,14 @@ const COMMANDS = Object.freeze({
     const count = (props.length > 1 && !isNaN(props[1]))?parseInt(props[1]):1;
     const messages = [];
     for (let i = 0; i < count; ++i) messages.push(channel.send(`<@${tag}>`));
-    (await Promise.all(messages)).forEach(m => m.delete());
-    msg.delete();
+    channel.bulkDelete([...(await Promise.all(messages)), msg]);
   }
 });
 
 
 const parseCommand = msg => {
-  if (!msg.content.startsWith("~")) return;
-  msg.content = msg.content.substring(1);
+  if (!msg.content.startsWith(PREFIX)) return;
+  msg.content = msg.content.substring(PREFIX.length);
   if (CommandSession.sendSessionMsg(msg)) return;
   const props = msg.content.split(" ");
   const command = props.shift();
@@ -54,4 +54,4 @@ const parseCommand = msg => {
 
 client.on('ready', () => console.log(`Logged in as ${client.user.tag}!`));
 client.on('message', parseCommand);
-client.login(token);
+client.login(TOKEN);
