@@ -20,6 +20,8 @@ const COMMANDS = Object.freeze({
     s.onMsg(s => {
       s.channel.send("Session Command");
     });
+
+    channel.send("Command Session Started");
   }
 });
 

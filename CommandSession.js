@@ -5,23 +5,24 @@ const CommandSession = function(channel = null, users = [], timeout = 60) {
   this.timeoutFunc = null;
   this.timeoutDuration = timeout;
   this.timeoutTimer = setTimeout(this.Timeout.bind(this), this.timeoutDuration * 1000);
-  this.id = ++CommandSession.id;
+  this.id = CommandSession.id++;
 };
 
 CommandSession.id = 0;
 CommandSession.sessions = [];
 
 CommandSession.remove = function(id) {
-  CommandSession.sessions = CommandSession.sessions.filter(session => this.session.id !== id);
+  this.sessions = this.sessions.filter(session => session.id !== id);
 };
 
 CommandSession.getSessions = function() {
-  return CommandSession.sessions;
+  return this.sessions;
 };
 
 CommandSession.create = function(...prams) {
   const s = new CommandSession(...prams);
   this.sessions.push(s);
+  console.log("Created", this);
   return s;
 };
 
@@ -36,7 +37,8 @@ CommandSession.sendSessionMsg = function(msg) {
 };
 
 CommandSession.prototype.checkForSession = function(msg) {
-  if (this.channel != null)
+  console.log(msg.channel.id === this.channel.id, this.users.length === 0, this.users.find(user => user.id.equals(msg.author.id)));
+  if (this.channel !== null)
     return msg.channel.id === this.channel.id && (this.users.length === 0 || this.users.find(user => user.id.equals(msg.author.id)));
   else
     return !!this.users.find(userID.equals(msg.author.id));
@@ -48,7 +50,6 @@ CommandSession.prototype.onMsg = function(f) {
 
 CommandSession.prototype.onTimeout = function(f) {
   this.timeoutFunc = f;
-  this.stop();
 };
 
 CommandSession.prototype.sendMsg = function(msg) {
@@ -58,11 +59,12 @@ CommandSession.prototype.sendMsg = function(msg) {
 
 CommandSession.prototype.stop = function() {
   clearTimeout(this.timeoutTimer);
-  CommandSession.remove(this.id);
+  this.remove(this.id);
 };
 
 CommandSession.prototype.Timeout = function() {
   if (this.timeoutFunc !== null) this.timeoutFunc(this);
+  this.stop();
 };
 
 CommandSession.prototype.resetTimeout = function() {
