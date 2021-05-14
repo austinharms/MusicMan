@@ -21,7 +21,7 @@ CommandSession.getSessions = function() {
 
 CommandSession.create = function(...prams) {
   const s = new CommandSession(...prams);
-  this.sessions.add(s);
+  this.sessions.push(s);
   return s;
 };
 
