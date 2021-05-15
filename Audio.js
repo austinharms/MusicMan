@@ -1,3 +1,5 @@
+const ytdl = require('ytdl-core');
+
 const Audio = function() {
   this.voiceConnection = null;
   this.channelId = -1;

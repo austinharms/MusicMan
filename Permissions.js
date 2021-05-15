@@ -7,6 +7,10 @@ const Permissions = function() {
     {
       "id": "492105847397285888",
       level: 1
+    },
+    {
+      "id": "385283295933628419",
+      level: 5
     }
   ];
 };

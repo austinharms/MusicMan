@@ -82,7 +82,7 @@ const COMMANDS = Object.freeze({
     func: (props, user, channel, msg) => {
       Audio.join(user, msg.guild, channel);
     },
-    maxLevel: 0,
+    maxLevel: 10,
     showPermissionError: true,
     name: "join",
     disabled: false,
@@ -92,7 +92,7 @@ const COMMANDS = Object.freeze({
     func: (props, user, channel, msg) => {
       Audio.playFile(user, msg.guild, channel, props[0]);
     },
-    maxLevel: 0,
+    maxLevel: 1,
     showPermissionError: true,
     name: "play",
     disabled: false,
@@ -102,7 +102,7 @@ const COMMANDS = Object.freeze({
     func: (props, user, channel, msg) => {
       Audio.playYT(user, msg.guild, channel, props[0]);
     },
-    maxLevel: 0,
+    maxLevel: 10,
     showPermissionError: true,
     name: "play",
     disabled: false,
@@ -112,7 +112,7 @@ const COMMANDS = Object.freeze({
     func: (props, user, channel, msg) => {
       Audio.leave(channel);
     },
-    maxLevel: 0,
+    maxLevel: 10,
     showPermissionError: true,
     name: "leave",
     disabled: false,
