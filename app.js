@@ -16,7 +16,7 @@ const parseCommand = msg => {
   if (COMMANDS[command]) {
     try {
       const cmd = COMMANDS[command];
-      if (Permissions.checkPerm(cmd, msg.author, msg.channel)) cmd(props, msg.author, msg.channel, msg);
+      if (Permissions.checkPerm(cmd, msg.author, msg.channel)) cmd.func(props, msg.author, msg.channel, msg);
     } catch(e) {
       console.log("Error running command: " + command + " Error: " + e + " MSG ID: " + msg);
     }
