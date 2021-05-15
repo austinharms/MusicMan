@@ -1,11 +1,12 @@
 const CommandSession = require("./CommandSession.js");
 const Audio = require("./Audio.js");
 const Permissions = require("./Permissions.js");
+const UTILITIES = require("./Utilities.js");
 
 const COMMANDS = Object.freeze({
   "hi": { 
     func: (props, user, channel, msg) => {
-      channel.send("Hi!");
+      channel.send(UTILITIES.getUserId(msg.guild, props[0]));
     },
     maxLevel: -1,
     showPermissionError: false,
