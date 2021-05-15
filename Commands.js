@@ -78,11 +78,11 @@ const COMMANDS = Object.freeze({
     name: "join",
     id: 6,
   },
-  playF: {
+  playf: {
     func: (props, user, channel, msg) => {
       Audio.playFile(msg, user, msg.guild, channel, props[0]);
     },
-    name: "play",
+    name: "playf",
     id: 7,
   },
   play: {

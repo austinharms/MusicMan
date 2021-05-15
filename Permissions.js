@@ -57,13 +57,12 @@ Permissions.prototype.getUserPermission = async function(userId, guildId) {
 
 Permissions.prototype.setCommandDisabled = async function(cmdId, guildId, disabled, msg) {
   const res = await DB.insert(`INSERT OR REPLACE INTO CommandPermissions(commandId, guildId, disabled, disabledMessage) VALUES (${cmdId}, ${guildId}, ${disabled?1:0}, '${msg}');`);
-  console.log(res);
   return res;
 };
 
 Permissions.prototype.checkDisabled = function(cmd) {
   if (this.getCommandDisabled(cmd)) {
-    if (cmd.disabledMessage !== null && cmd.disabledMessage.length > 0)
+    if (cmd.disabledMessage && cmd.disabledMessage.length > 0)
       return "Disabled: " + cmd.disabledMessage;
     return "Command Disabled";
   }
@@ -77,7 +76,7 @@ Permissions.prototype.checkPermission = async function(cmd, userId, guildID) {
   const userLevel = await this.getUserPermission(userId, guildID);
   if (userLevel <= cmdLevel && userLevel !== -1) return true;
 
-  if (cmd.permissionMessage !== null && cmd.permissionMessage.length > 0)
+  if (cmd.permissionMessage && cmd.permissionMessage.length > 0)
       return "Invalid Permission: " + cmd.permissionMessage;
   return "Invalid Permission to use Command";
 };
