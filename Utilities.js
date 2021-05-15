@@ -18,6 +18,12 @@ const UTILITIES = Object.freeze({
       return false;
     }
   },
+  pingUserText: function(userId) {
+    return `<@${userId}>`
+  },
+  pingUser: function(userId, channel) {
+    return channel.send(this.pingUserText(userId));
+  },
   reactThumbsUp: function(msg) {
     msg.react("👍").catch(e => console.log("Error Failed to add Reaction: " + e));
   }, 

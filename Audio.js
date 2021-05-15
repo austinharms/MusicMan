@@ -1,18 +1,18 @@
 const ytdl = require('ytdl-core');
+const UTILITIES = require("./Utilities.js");
 
 const Audio = function() {
   this.voiceConnection = null;
   this.channelId = -1;
   this.channelName = "";
   this.errorEvent = () => this.leave();
-  this.react = "👍";
 }
 
 Audio.prototype.join = async function(msg, user, guild, channel) {
   try {
     const cId = guild.voiceStates.cache.get(user.id).channelID;
     if (cId === this.channelId) { 
-      msg.react(this.react);
+      UTILITIES.reactThumbsUp(msg);
       return;
     } else if (this.channelId !== -1) {
       this.voiceConnection.disconnect();
@@ -28,8 +28,7 @@ Audio.prototype.join = async function(msg, user, guild, channel) {
     this.voiceConnection.on("error", this.errorEvent);
     this.voiceConnection.on("failed", this.errorEvent);
     this.voiceConnection.on("disconnect", this.errorEvent);
-
-    msg.react(this.react);
+    UTILITIES.reactThumbsUp(msg);
   } catch(e) {
     console.log("Error Connecting to voice chat: " + e);
     channel.send("Failed to Connect to Voice Channel");
@@ -57,10 +56,10 @@ Audio.prototype.leave = async function(channel) {
 
 Audio.prototype.playFile = async function(msg, user, guild, channel, file) {
   try {
-  if (this.channelId === -1)
-    await this.join(user, guild, channel);
-  this.voiceConnection.play("./" + file);
-  msg.react(this.react);
+    if (this.channelId === -1)
+      await this.join(user, guild, channel);
+    this.voiceConnection.play("./" + file);
+    UTILITIES.reactThumbsUp(msg);
   } catch(e) {
     console.log("Error Playing File to voice chat: " + e);
     channel.send("Failed to Play File");
@@ -69,10 +68,10 @@ Audio.prototype.playFile = async function(msg, user, guild, channel, file) {
 
 Audio.prototype.playYT = async function(msg, user, guild, channel, url) {
   try {
-  if (this.channelId === -1)
-    await this.join(user, guild, channel);
-  this.voiceConnection.play(ytdl(url, { quality: 'highestaudio' }));
-  msg.react(this.react);
+    if (this.channelId === -1)
+      await this.join(user, guild, channel);
+    this.voiceConnection.play(ytdl(url, { quality: 'highestaudio' }));
+    UTILITIES.reactThumbsUp(msg);
   } catch(e) {
     console.log("Error Playing YT to voice chat: " + e);
     channel.send("Failed to Play Link");

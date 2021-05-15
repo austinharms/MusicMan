@@ -6,7 +6,15 @@ const UTILITIES = require("./Utilities.js");
 const COMMANDS = Object.freeze({
   "hi": { 
     func: (props, user, channel, msg) => {
-      channel.send(UTILITIES.getUserId(msg.guild, props[0]));
+      if (props.length > 0) {
+        const userId = UTILITIES.getUserId(msg.guild, props[0]);
+        if (userId) {
+          channel.send("Hi! " + UTILITIES.pingUserText(userId));
+          return;
+        }
+      }
+
+      channel.send("Hi!");
     },
     maxLevel: -1,
     showPermissionError: false,
