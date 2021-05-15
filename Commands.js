@@ -5,30 +5,28 @@ const UTILITIES = require("./Utilities.js");
 
 const COMMANDS = Object.freeze({
   hi: {
-    func: (props, user, channel, msg) => {
+    func: (msg, props) => {
       if (props.length > 0) {
         const userId = UTILITIES.getUserId(msg.guild, props[0]);
-        if (userId) {
-          channel.send("Hi! " + UTILITIES.pingUserText(userId));
-          return;
-        }
+        if (userId)
+          return msg.channel.send("Hi! " + UTILITIES.pingUserText(userId));
       }
 
-      channel.send("Hi!");
+      msg.channel.send("Hi!");
     },
     name: "hi",
     id: 0,
   },
   say: {
-    func: (props, user, channel, msg) => {
-      channel.send(props.join(" "));
+    func: (msg, props) => {
+      msg.channel.send(props.join(" "));
     },
     name: "say",
     id: 1,
   },
   start: {
-    func: (props, user, channel, msg) => {
-      const s = CommandSession.create(channel, [], 10);
+    func: (msg, props) => {
+      const s = CommandSession.create(msg.channel, [], 10);
       s.onTimeout((s) => {
         s.channel.send("Command Session Timeout!");
       });
@@ -37,71 +35,78 @@ const COMMANDS = Object.freeze({
         s.channel.send("Session Command");
       });
 
-      channel.send("Command Session Started");
+      msg.channel.send("Command Session Started");
     },
     name: "start",
     id: 2,
   },
   tic: {
-    func: (props, user, channel, msg) => {},
+    func: (msg, props) => {},
     name: "tic",
     id: 3,
   },
   gping: {
-    func: async (props, user, channel, msg) => {
+    func: async (msg, props) => {
       const tag =
-        (prop.length > 0 ? UTILITIES.getUserId(props[0]) : false) || user.id;
+        (prop.length > 0 ? UTILITIES.getUserId(props[0]) : false) || msg.author.id;
       const count =
         props.length > 1 && !isNaN(props[1]) ? parseInt(props[1]) : 1;
       const messages = [];
-      for (let i = 0; i < count; ++i) messages.push(channel.send(`<@${tag}>`));
-      channel.bulkDelete([...(await Promise.all(messages)), msg]);
+      for (let i = 0; i < count; ++i) messages.push(msg.channel.send(`<@${tag}>`));
+      msg.channel.bulkDelete([...(await Promise.all(messages)), msg]);
     },
     name: "gping",
     id: 4,
   },
   bping: {
-    func: (props, user, channel, msg) => {
+    func: (msg, props) => {
       const tag =
-        (prop.length > 0 ? UTILITIES.getUserId(props[0]) : false) || user.id;
+        (prop.length > 0 ? UTILITIES.getUserId(props[0]) : false) || msg.author.id;
       const count =
         props.length > 1 && !isNaN(props[1]) ? parseInt(props[1]) : 1;
-      for (let i = 0; i < count; ++i) channel.send(`<@${tag}>`);
+      for (let i = 0; i < count; ++i) msg.channel.send(`<@${tag}>`);
     },
     name: "bping",
     id: 5,
   },
   join: {
-    func: (props, user, channel, msg) => {
+    func: (msg, props) => {
       Audio.join(msg);
     },
     name: "join",
     id: 6,
   },
   skip: {
-    func: (props, user, channel, msg) => {
+    func: (msg, props) => {
       Audio.play(msg.guild.id);
       UTILITIES.reactThumbsUp(msg);
     },
     name: "skip",
     id: 7,
   },
+  queue: {
+    func: (msg, props) => {
+      Audio.viewQueue(msg);
+    },
+    name: "queue",
+    id: 13,
+  },
   play: {
-    func: (props, user, channel, msg) => {
+    func: (msg, props) => {
       Audio.addQueue(msg, props);
     },
     name: "play",
     id: 8,
   },
   leave: {
-    func: (props, user, channel, msg) => {
+    func: (msg, props) => {
       Audio.leave(msg);
     },
     name: "leave",
     id: 9,
   },
   perm: {
-    func: async (props, user, channel, msg) => {
+    func: async (msg, props) => {
       if (props.length >= 2) {
         if (props[0].toLowerCase() === "cmd") {
           const cmd = COMMANDS[props[1].toLowerCase()];
@@ -109,7 +114,7 @@ const COMMANDS = Object.freeze({
             if (props.length >= 3) {
               if (!isNaN(props[2])) {
                 const level = parseInt(props[2]);
-                const userLevel = await Permissions.getUserPermission(user.id, msg.guild.id);
+                const userLevel = await Permissions.getUserPermission(msg.author.id, msg.guild.id);
                 if (userLevel !== -1 && level <= 1000 && level >= userLevel || level === -1) {
                   await Permissions.setCommandPermission(
                     cmd.id,
@@ -178,7 +183,7 @@ const COMMANDS = Object.freeze({
     id: 10,
   },
   disable: {
-    func: async (props, user, channel, msg) => {
+    func: async (msg, props) => {
       if (props.length > 0) {
         const cmd = COMMANDS[props.shift().toLowerCase()];
         if (cmd && cmd.id !== 11 && cmd.id !== 12 && cmd.id !== 10) {
@@ -194,7 +199,7 @@ const COMMANDS = Object.freeze({
     id: 11,
   },
   enable: {
-    func: async (props, user, channel, msg) => {
+    func: async (msg, props) => {
       if (props.length > 0) {
         const cmd = COMMANDS[props.shift().toLowerCase()];
         if (cmd) {
@@ -208,6 +213,13 @@ const COMMANDS = Object.freeze({
     },
     name: "enable",
     id: 12,
+  },
+  help: {
+    func: async (msg, props) => {
+      msg.reply("Invalid Arguments");
+    },
+    name: "help",
+    id: 14,
   },
 });
 

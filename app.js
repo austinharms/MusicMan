@@ -28,7 +28,7 @@ const parseCommand = async msg => {
 
         const permission = await Permissions.checkPermission(cmdDB, msg.author.id, msg.guild.id);
         if (permission === true) {
-          cmd.func(props, msg.author, msg.channel, msg);
+          cmd.func(msg, props);
         } else {
           msg.reply(permission);
         }
