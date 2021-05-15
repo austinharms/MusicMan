@@ -1,4 +1,5 @@
 const CommandSession = require("./CommandSession.js");
+const Audio = require("./Audio.js");
 const Permissions = require("./Permissions.js");
 
 const COMMANDS = Object.freeze({
@@ -77,14 +78,33 @@ const COMMANDS = Object.freeze({
     disabled: false,
     showDisabled: true
   },
+  "join": { 
+    func: (props, user, channel, msg) => {
+      Audio.join(user, msg.guild, channel);
+    },
+    maxLevel: 0,
+    showPermissionError: true,
+    name: "join",
+    disabled: false,
+    showDisabled: true
+  },
   "play": { 
     func: (props, user, channel, msg) => {
-      console.log(msg.guild.channels);
-      console.log(msg.guild.voiceStates);
+      Audio.playFile(user, msg.guild, channel, props[0]);
     },
     maxLevel: 0,
     showPermissionError: true,
     name: "play",
+    disabled: false,
+    showDisabled: true
+  },
+  "leave": { 
+    func: (props, user, channel, msg) => {
+      Audio.leave(channel);
+    },
+    maxLevel: 0,
+    showPermissionError: true,
+    name: "leave",
     disabled: false,
     showDisabled: true
   }
