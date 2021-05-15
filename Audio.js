@@ -23,6 +23,9 @@ Audio.prototype.join = async function(user, guild, channel) {
     this.voiceConnection = await VC.join();
     this.channelId = cId;
     this.channelName = VC.name;
+    this.voiceConnection.on("error", () => this.leave());
+    this.voiceConnection.on("failed", () => this.leave());
+    this.voiceConnection.on("disconnect", () => this.leave());
     channel.send(`Connected to ${this.channelName}`);
   } catch(e) {
     console.log("Error Connecting to voice chat: " + e);
@@ -31,6 +34,7 @@ Audio.prototype.join = async function(user, guild, channel) {
 };
 
 Audio.prototype.leave = async function(channel) {
+  console.log(this.leave);
   try {
     if (this.channelId !== -1) {
       this.voiceConnection.disconnect();
@@ -38,11 +42,12 @@ Audio.prototype.leave = async function(channel) {
       this.channelId = -1;
       this.channelName = "";
     }
-
-    channel.send(`Disconnected`);
+    if (channel)
+      channel.send(`Disconnected`);
   } catch(e) {
     console.log("Error Disconnecting from voice chat: " + e);
-    channel.send("Failed to Disconnect from Voice Channel");
+    if (channel)
+      channel.send("Failed to Disconnect from Voice Channel");
   }
 };
 
