@@ -14,20 +14,24 @@ DB.prototype.open = async function() {
   }
 
   return new Promise(async (resolve, reject) => { 
-    const fileExists = await fsPromises.access(this.dbPath, fs.constants.W_OK).then(() => true).catch(() => false);
-    const db = new sqlite.Database(this.dbPath, err => {
-      if(err)
-        reject(err.message);
-    });
-  
-    if(!fileExists && recreateFunc !== undefined) {
-      //recreate db here
-      console.log("Database not found, Recreated");
-    }
+    try {
+      const fileExists = await fsPromises.access(this.dbPath, fs.constants.W_OK).then(() => true).catch(() => false);
+      const db = new sqlite.Database(this.dbPath, err => {
+        if(err)
+          reject(err.message);
+      });
     
-    this.db = db;
-    this.connected = true;
-    resolve(db);
+      if(!fileExists) {
+        //recreate db here
+        console.log("Database not found, Recreated");
+      }
+      
+      this.db = db;
+      this.connected = true;
+      resolve(db);
+    } catch(e) {
+      reject(e);
+    }
   });
 };
 

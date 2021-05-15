@@ -3,6 +3,7 @@ const Discord = require('discord.js');
 const COMMANDS = require("./Commands.js"); 
 const CommandSession = require("./CommandSession.js"); 
 const Permissions = require("./Permissions.js");
+const DB = require("./DB.js");
 
 const TOKEN = process.env.BOT_TOKEN;
 const PREFIX = process.env.CMD_PREFIX;
@@ -24,6 +25,31 @@ const parseCommand = msg => {
   }
 };
 
-client.on('ready', () => console.log(`Logged in as ${client.user.tag}!`));
+
+let start = 0n;
+let end = 0n;
+
 client.on('message', parseCommand);
-client.login(TOKEN);
+
+const login = () => new Promise((resolve, reject) => {
+  try {
+    client.on('ready', () => {
+      resolve(client.user.tag);
+    });
+    client.login(TOKEN);
+  } catch(e) {
+    reject(e);
+  }
+});
+
+(async function() {
+  try {
+    await DB.open();
+    const tag = await login();
+    console.log("Bot Started with Tag: " + tag);
+  } catch(e) {
+    console.log("Error Starting Bot: " + e);
+    DB.close();
+    client.destroy();
+  }
+})();
