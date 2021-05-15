@@ -29,7 +29,7 @@ const COMMANDS = Object.freeze({
     maxLevel: -1,
     showPermissionError: false,
     name: "say",
-    disabled: false,
+    disabled: true,
     showDisabled: true
   },
   "start": { 
@@ -48,12 +48,12 @@ const COMMANDS = Object.freeze({
     maxLevel: 1,
     showPermissionError: true,
     name: "start",
-    disabled: false,
+    disabled: true,
     showDisabled: true
   },
   "tic": { 
     func: (props, user, channel, msg) => {
-      channel.send(props.join(" "));
+      
     },
     maxLevel: -1,
     showPermissionError: false,
@@ -63,7 +63,7 @@ const COMMANDS = Object.freeze({
   },
   "gping": { 
     func: async (props, user, channel, msg) => {
-      const tag = (props.length === 0 || isNaN(props[0]))?user.id:props[0];
+      const tag = (prop.length > 0?UTILITIES.getUserId(props[0]):false)||user.id;
       const count = (props.length > 1 && !isNaN(props[1]))?parseInt(props[1]):1;
       const messages = [];
       for (let i = 0; i < count; ++i) messages.push(channel.send(`<@${tag}>`));
@@ -77,7 +77,7 @@ const COMMANDS = Object.freeze({
   },
   "bping": { 
     func: (props, user, channel, msg) => {
-      const tag = (props.length === 0 || isNaN(props[0]))?user.id:props[0];
+      const tag = (prop.length > 0?UTILITIES.getUserId(props[0]):false)||user.id;
       const count = (props.length > 1 && !isNaN(props[1]))?parseInt(props[1]):1;
       for (let i = 0; i < count; ++i) channel.send(`<@${tag}>`);
     },
