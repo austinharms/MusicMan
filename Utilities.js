@@ -26,7 +26,10 @@ const UTILITIES = Object.freeze({
   },
   reactThumbsUp: function(msg) {
     msg.react("👍").catch(e => console.log("Error Failed to add Reaction: " + e));
-  }, 
+  },
+  clampValue: function(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  },
 });
 
 module.exports = UTILITIES;

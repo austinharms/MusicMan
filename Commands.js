@@ -87,7 +87,7 @@ const COMMANDS = Object.freeze({
   },
   play: {
     func: (props, user, channel, msg) => {
-      Audio.playYT(msg, user, msg.guild, channel, props[0]);
+      Audio.playYT(msg, user, msg.guild, channel, props[0], props);
     },
     name: "play",
     id: 8,

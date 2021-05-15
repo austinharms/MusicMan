@@ -1,4 +1,4 @@
-const ytdl = require('ytdl-core');
+const ytdl = require('discord-ytdl-core');
 const UTILITIES = require("./Utilities.js");
 
 const Audio = function() {
@@ -67,11 +67,28 @@ Audio.prototype.playFile = async function(msg, user, guild, channel, file) {
   }
 };
 
-Audio.prototype.playYT = async function(msg, user, guild, channel, url) {
+Audio.prototype.playYT = async function(msg, user, guild, channel, url, props) {
   try {
-    if (this.channelId === -1)
-      await this.join(user, guild, channel);
-    this.voiceConnection.play(ytdl(url, { quality: 'highestaudio' }), { volume: 0.5 });
+    if (!ytdl.validateURL(url)) {
+      channel.send("Invalid URL");
+      return;
+    }
+    if (this.channelId === -1) await this.join(msg, user, guild, channel);
+    props = props.map(p => p.toLowerCase());
+    const encoderArgs = [];
+
+    const foundBass = props.findIndex(p => p === "bassboost");
+    if (foundBass != -1) {
+      const gain = isNaN(props[foundBass + 1])?15:UTILITIES.clampValue(parseInt(props[foundBass + 1]), -100, 100);
+      encoderArgs.push('-af', "bass=g=" + gain);
+    }
+
+    this.voiceConnection.play(ytdl(url, { 
+      quality: 'highestaudio',
+      filter: "audioonly",
+      fmt: "mp3",
+      encoderArgs
+     }), { volume: 0.5 });
     UTILITIES.reactThumbsUp(msg);
   } catch(e) {
     console.log("Error Playing YT to voice chat: " + e);

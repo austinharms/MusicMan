@@ -76,8 +76,9 @@ Permissions.prototype.checkPermission = async function(cmd, userId, guildID) {
   const userLevel = await this.getUserPermission(userId, guildID);
   if (userLevel <= cmdLevel && userLevel !== -1) return true;
 
-  if (cmd.permissionMessage && cmd.permissionMessage.length > 0)
-      return "Invalid Permission: " + cmd.permissionMessage;
+  if (cmd.permissionMessage && cmd.permissionMessage.length > 0 && cmd.permissionMessage !== "undefined")
+    return "Invalid Permission: " + cmd.permissionMessage;
+
   return "Invalid Permission to use Command";
 };
 module.exports = new Permissions();
