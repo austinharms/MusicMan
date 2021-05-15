@@ -137,7 +137,7 @@ const COMMANDS = Object.freeze({
             return;
           }
         } else if (props[0].toLowerCase() === "user") {
-          const user = UTILITIES.getUserId(props[1]);
+          const user = UTILITIES.getUserId(msg.guild, props[1]);
           if (user !== false) {
             if (props.length >= 3) {
               if (!isNaN(props[2])) {
@@ -166,6 +166,7 @@ const COMMANDS = Object.freeze({
                 props[1] +
                 '"'
             );
+            return;
           }
         }
       }

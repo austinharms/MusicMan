@@ -50,7 +50,7 @@ Permissions.prototype.setUserPermission = async function(userId, guildId, level)
 };
 
 Permissions.prototype.getUserPermission = async function(userId, guildId) {
-  const res = await DB.insert(`SELECT * FROM UserPermissions WHERE userId == ${userId} AND guildId == ${guildId}`);
+  const res = await DB.query(`SELECT * FROM UserPermissions WHERE userId == ${userId} AND guildId == ${guildId}`);
   if (res.length > 0) return res[0].permissionLevel;
   return -1;
 };
