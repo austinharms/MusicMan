@@ -58,7 +58,7 @@ Audio.prototype.playFile = async function(msg, user, guild, channel, file) {
   try {
     if (this.channelId === -1)
       await this.join(user, guild, channel);
-    this.voiceConnection.play("./" + file);
+    this.voiceConnection.play("./" + file, { volume: 0.5 });
     UTILITIES.reactThumbsUp(msg);
   } catch(e) {
     console.log("Error Playing File to voice chat: " + e);
@@ -70,7 +70,7 @@ Audio.prototype.playYT = async function(msg, user, guild, channel, url) {
   try {
     if (this.channelId === -1)
       await this.join(user, guild, channel);
-    this.voiceConnection.play(ytdl(url, { quality: 'highestaudio' }));
+    this.voiceConnection.play(ytdl(url, { quality: 'highestaudio' }), { volume: 0.5 });
     UTILITIES.reactThumbsUp(msg);
   } catch(e) {
     console.log("Error Playing YT to voice chat: " + e);
