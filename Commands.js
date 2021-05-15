@@ -73,28 +73,29 @@ const COMMANDS = Object.freeze({
   },
   join: {
     func: (props, user, channel, msg) => {
-      Audio.join(msg, user, msg.guild, channel);
+      Audio.join(msg);
     },
     name: "join",
     id: 6,
   },
-  playf: {
+  skip: {
     func: (props, user, channel, msg) => {
-      Audio.playFile(msg, user, msg.guild, channel, props[0]);
+      Audio.play(msg.guild.id);
+      UTILITIES.reactThumbsUp(msg);
     },
-    name: "playf",
+    name: "skip",
     id: 7,
   },
   play: {
     func: (props, user, channel, msg) => {
-      Audio.playYT(msg, user, msg.guild, channel, props[0], props);
+      Audio.addQueue(msg, props);
     },
     name: "play",
     id: 8,
   },
   leave: {
     func: (props, user, channel, msg) => {
-      Audio.leave(channel);
+      Audio.leave(msg);
     },
     name: "leave",
     id: 9,

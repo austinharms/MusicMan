@@ -20,28 +20,23 @@ DB.prototype.open = function() {
         if(err)
           reject(err.message);
       });
-        
       this.db = db;
       this.connected = true;
-      if(!fileExists) {
-        this.insert( `CREATE TABLE IF NOT EXISTS CommandPermissions (
-          commandId INTEGER NOT NULL,
-          guildId TEXT NOT NULL,
-          disabled INTEGER,
-          disabledMessage TEXT,
-          permissionLevel INTEGER,
-          permissionMessage TEXT,
-          PRIMARY KEY ( commandId, guildId)
-          );`);
-          this.insert( `CREATE TABLE IF NOT EXISTS UserPermissions (
-            userId INTEGER NOT NULL,
-            guildId TEXT NOT NULL,
-            permissionLevel INTEGER NOT NULL,
-            PRIMARY KEY ( userId, guildId)
-            );`);
-        console.log("Database not found, Recreated");
-      }
-
+      this.insert( `CREATE TABLE IF NOT EXISTS CommandPermissions (
+        commandId INTEGER NOT NULL,
+        guildId TEXT NOT NULL,
+        disabled INTEGER,
+        disabledMessage TEXT,
+        permissionLevel INTEGER,
+        permissionMessage TEXT,
+        PRIMARY KEY ( commandId, guildId)
+        );`);
+      this.insert( `CREATE TABLE IF NOT EXISTS UserPermissions (
+        userId INTEGER NOT NULL,
+        guildId TEXT NOT NULL,
+        permissionLevel INTEGER NOT NULL,
+        PRIMARY KEY ( userId, guildId)
+      );`);
       resolve(db);
     } catch(e) {
       reject(e);

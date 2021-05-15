@@ -1,34 +1,25 @@
 const ytdl = require('discord-ytdl-core');
 const UTILITIES = require("./Utilities.js");
+const DB = require("./DB.js");
 
 const Audio = function() {
-  this.voiceConnection = null;
-  this.channelId = -1;
-  this.channelName = "";
-  this.errorEvent = () => this.leave();
+  this.connections = {};
 }
 
-Audio.prototype.join = async function(msg, user, guild, channel) {
+Audio.prototype.join = async function(msg) {
   try {
-    const cId = guild.voiceStates.cache.get(user.id).channelID;
-    if (cId === this.channelId) { 
-      UTILITIES.reactThumbsUp(msg);
-      return;
-    } else if (this.channelId !== -1) {
-      this.voiceConnection.disconnect();
-      this.channelId = -1;
-      this.channelName = "";
-      this.voiceConnection = null;
-    }
-
-    const VC = guild.channels.cache.get(cId);
-    this.voiceConnection = await VC.join();
-    this.channelId = cId;
-    this.channelName = VC.name;
-    this.voiceConnection.on("error", this.errorEvent);
-    this.voiceConnection.on("failed", this.errorEvent);
-    this.voiceConnection.on("disconnect", this.errorEvent);
-    this.voiceConnection.setSpeaking(0);
+    if (!msg.member.voice.channel) return msg.reply("You Must be in a Voice Channel to run this Command");
+    const channel = msg.member.voice.channel;
+    if (this.connections[msg.guild.id] && channel.id === this.connections[msg.guild.id].channelId) return UTILITIES.reactThumbsUp(msg);
+    if (this.connections[msg.guild.id]) this.disconnect(msg.guild.id);
+    const con = {queue: [], stream: null, playing: null, channel: msg.channel};
+    con.voiceConnection = await channel.join();
+    con.id = channel.id;
+    con.errorEvent = this.disconnect.bind(this, msg.guild.id);
+    con.voiceConnection.on("error", con.errorEvent);
+    con.voiceConnection.on("failed", con.errorEvent);
+    con.voiceConnection.on("disconnect", con.errorEvent);
+    this.connections[msg.guild.id] = con;
     UTILITIES.reactThumbsUp(msg);
   } catch(e) {
     console.log("Error Connecting to voice chat: " + e);
@@ -36,64 +27,78 @@ Audio.prototype.join = async function(msg, user, guild, channel) {
   }
 };
 
-Audio.prototype.leave = async function(channel) {
+Audio.prototype.disconnect = async function(guildId) {
   try {
-    this.voiceConnection.removeListener("error", this.errorEvent);
-    this.voiceConnection.removeListener("failed", this.errorEvent);
-    this.voiceConnection.removeListener("disconnect", this.errorEvent);
-
-    if (this.channelId !== -1) {
-      this.voiceConnection.disconnect();
-      this.voiceConnection = null;
-      this.channelId = -1;
-      this.channelName = "";
-    }
+    const con = this.connections[guildId];
+    if (!con) return;
+    con.voiceConnection.removeListener("error", con.errorEvent);
+    con.voiceConnection.removeListener("failed", con.errorEvent);
+    con.voiceConnection.removeListener("disconnect", con.errorEvent);
+    con.voiceConnection.disconnect();
+    this.connections[guildId] = null;
   } catch(e) {
     console.log("Error Disconnecting from voice chat: " + e);
-    if (channel)
-      channel.send("Failed to Disconnect from Voice Channel");
   }
 };
 
-Audio.prototype.playFile = async function(msg, user, guild, channel, file) {
+Audio.prototype.leave = async function(msg) {
   try {
-    if (this.channelId === -1)
-      await this.join(user, guild, channel);
-    this.voiceConnection.play("./" + file, { volume: 0.5 });
+    this.disconnect(msg.guild.id);
     UTILITIES.reactThumbsUp(msg);
   } catch(e) {
-    console.log("Error Playing File to voice chat: " + e);
-    channel.send("Failed to Play File");
+    console.log("Error Disconnecting from voice chat: " + e);
+    msg.reply("Failed to Disconnect from Voice Channel");
   }
 };
 
-Audio.prototype.playYT = async function(msg, user, guild, channel, url, props) {
+Audio.prototype.play = async function(guilId) {
+  const con = this.connections[guilId];
+  if (!con) return;
   try {
-    if (!ytdl.validateURL(url)) {
-      channel.send("Invalid URL");
+    if (con.stream !== null) con.stream.destroy();
+    if (con.queue.length === 0) {
+      con.playing = null;
+      con.stream = null;
       return;
     }
-    if (this.channelId === -1) await this.join(msg, user, guild, channel);
-    props = props.map(p => p.toLowerCase());
-    const encoderArgs = [];
 
-    const foundBass = props.findIndex(p => p === "bassboost");
-    if (foundBass != -1) {
-      const gain = isNaN(props[foundBass + 1])?15:UTILITIES.clampValue(parseInt(props[foundBass + 1]), -100, 100);
-      encoderArgs.push('-af', "bass=g=" + gain);
-    }
-
-    this.voiceConnection.play(ytdl(url, { 
+    con.playing = con.queue.shift();
+    con.stream = ytdl(con.playing.URL, {
+      encoderArgs: con.playing.encoderArgs,
+      fmt: "mp3",
       quality: 'highestaudio',
       filter: "audioonly",
-      fmt: "mp3",
-      encoderArgs
-     }), { volume: 0.5 });
-    UTILITIES.reactThumbsUp(msg);
+    });
+    con.voiceConnection.play(con.stream, { volume: 0.5 }).on("finish", this.play.bind(this, guilId));
   } catch(e) {
     console.log("Error Playing YT to voice chat: " + e);
-    channel.send("Failed to Play Link");
+    con.channel.send("Failed to Play: ");
+    if (con.queue.length > 0) this.play(guilId);
   }
+};
+
+Audio.prototype.addQueue = async function(msg, props) {
+  if (!this.connections[msg.guild.id]) await this.join(msg);
+  const connection = this.connections[msg.guild.id];
+  const URL = props.shift();
+  if (!ytdl.validateURL(URL)) return msg.reply("Invalid URL");
+  props = props.map(p => p.toLowerCase());
+  const encoderArgs = [];
+  const foundBass = props.findIndex(p => p === "bassboost");
+  if (foundBass != -1) {
+    const gain = isNaN(props[foundBass + 1])?15:UTILITIES.clampValue(parseInt(props[foundBass + 1]), -100, 100);
+    encoderArgs.push('-af', "bass=g=" + gain);
+  }
+  const info = await ytdl.getBasicInfo(URL);
+  connection.queue.push({
+    URL,
+    title: info.title,
+    length: parseInt(info.lengthSeconds),
+    encoderArgs
+  })
+  if (connection.playing === null)
+    this.play(msg.guild.id);
+  UTILITIES.reactThumbsUp(msg);
 };
 
 module.exports = new Audio();
