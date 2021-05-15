@@ -34,6 +34,7 @@ Audio.prototype.disconnect = async function(guildId) {
     con.voiceConnection.removeListener("error", con.errorEvent);
     con.voiceConnection.removeListener("failed", con.errorEvent);
     con.voiceConnection.removeListener("disconnect", con.errorEvent);
+    if (con.stream !== null) con.stream.destroy();
     con.voiceConnection.disconnect();
     this.connections[guildId] = null;
   } catch(e) {
@@ -72,10 +73,25 @@ Audio.prototype.play = async function(guilId) {
     con.voiceConnection.play(con.stream, { volume: 0.5 }).on("finish", this.play.bind(this, guilId));
   } catch(e) {
     console.log("Error Playing YT to voice chat: " + e);
-    con.channel.send("Failed to Play: ");
+    con.channel.send("Failed to Play: " + con.playing.title);
     if (con.queue.length > 0) this.play(guilId);
   }
 };
+
+Audio.prototype.viewQueue = function(msg) {
+  const con = this.connections[msg.guild.id];
+  if (!con || con.playing === null && con.queue.length === 0) return msg.reply("Nothing Queued");
+  let msgStr = "Playing:\n";
+  msgStr += `\t${con.playing.title}, Duration: ${con.playing.length}s, URL: ${con.playing.URL}`;
+  if (con.queue.length > 0) {
+    msgStr += "\n\nQueue:";
+    msgStr +=con.queue.reduce((text, song, index) => text + `\n${index + 1}. ${song.title}, Duration: ${song.length}s, URL: ${song.URL}`, "");
+  } else {
+    msgStr += "\n\nNothing Queued";
+  }
+
+  msg.reply(msgStr);
+ };
 
 Audio.prototype.addQueue = async function(msg, props) {
   if (!this.connections[msg.guild.id]) await this.join(msg);
@@ -92,10 +108,10 @@ Audio.prototype.addQueue = async function(msg, props) {
   const info = await ytdl.getBasicInfo(URL);
   connection.queue.push({
     URL,
-    title: info.title,
-    length: parseInt(info.lengthSeconds),
+    title: info.videoDetails.title,
+    length: parseInt(info.videoDetails.lengthSeconds),
     encoderArgs
-  })
+  });
   if (connection.playing === null)
     this.play(msg.guild.id);
   UTILITIES.reactThumbsUp(msg);
