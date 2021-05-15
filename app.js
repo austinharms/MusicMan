@@ -3,44 +3,9 @@ const TOKEN = process.env.BOT_TOKEN;
 const PREFIX = process.env.CMD_PREFIX;
 const Discord = require('discord.js');
 const client = new Discord.Client();
+const COMMANDS = require("./Commands.js"); 
 const CommandSession = require("./CommandSession.js"); 
-
-const COMMANDS = Object.freeze({
-  "hi": (props, user, channel, msg) => {
-    channel.send("Hi!");
-  },
-  "say": (props, user, channel, msg) => {
-    channel.send(props.join(" "));
-  },
-  "start": (props, user, channel, msg) => {
-    const s = CommandSession.create(channel, [], 10);
-    s.onTimeout(s => {
-      s.channel.send("Command Session Timeout!");
-    });
-
-    s.onMsg(s => {
-      s.channel.send("Session Command");
-    });
-
-    channel.send("Command Session Started");
-  },
-  "tic": (props, user, channel, msg) => {
-    
-  },
-  "gping": async (props, user, channel, msg) => {
-    const tag = (props.length === 0 || isNaN(props[0]))?user.id:props[0];
-    const count = (props.length > 1 && !isNaN(props[1]))?parseInt(props[1]):1;
-    const messages = [];
-    for (let i = 0; i < count; ++i) messages.push(channel.send(`<@${tag}>`));
-    channel.bulkDelete([...(await Promise.all(messages)), msg]);
-  },
-  "bping": async (props, user, channel, msg) => {
-    const tag = (props.length === 0 || isNaN(props[0]))?user.id:props[0];
-    const count = (props.length > 1 && !isNaN(props[1]))?parseInt(props[1]):1;
-    for (let i = 0; i < count; ++i) channel.send(`<@${tag}>`);
-  },
-
-});
+const Permissions = require("./Permissions.js");
 
 const parseCommand = msg => {
   if (!msg.content.startsWith(PREFIX)) return;
