@@ -1,11 +1,12 @@
 require('dotenv').config();
-const TOKEN = process.env.BOT_TOKEN;
-const PREFIX = process.env.CMD_PREFIX;
 const Discord = require('discord.js');
-const client = new Discord.Client();
 const COMMANDS = require("./Commands.js"); 
 const CommandSession = require("./CommandSession.js"); 
 const Permissions = require("./Permissions.js");
+
+const TOKEN = process.env.BOT_TOKEN;
+const PREFIX = process.env.CMD_PREFIX;
+const client = new Discord.Client();
 
 const parseCommand = msg => {
   if (!msg.content.startsWith(PREFIX)) return;
