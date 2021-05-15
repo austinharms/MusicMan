@@ -28,7 +28,7 @@ Audio.prototype.join = async function(msg, user, guild, channel) {
     this.voiceConnection.on("error", this.errorEvent);
     this.voiceConnection.on("failed", this.errorEvent);
     this.voiceConnection.on("disconnect", this.errorEvent);
-    this.voiceConnection.setSpeaking("none");
+    this.voiceConnection.setSpeaking(0);
     UTILITIES.reactThumbsUp(msg);
   } catch(e) {
     console.log("Error Connecting to voice chat: " + e);
@@ -59,7 +59,6 @@ Audio.prototype.playFile = async function(msg, user, guild, channel, file) {
   try {
     if (this.channelId === -1)
       await this.join(user, guild, channel);
-    this.voiceConnection.setSpeaking("speaking");
     this.voiceConnection.play("./" + file, { volume: 0.5 });
     UTILITIES.reactThumbsUp(msg);
   } catch(e) {
@@ -72,7 +71,6 @@ Audio.prototype.playYT = async function(msg, user, guild, channel, url) {
   try {
     if (this.channelId === -1)
       await this.join(user, guild, channel);
-      speakingthis.voiceConnection.setSpeaking("speaking");
     this.voiceConnection.play(ytdl(url, { quality: 'highestaudio' }), { volume: 0.5 });
     UTILITIES.reactThumbsUp(msg);
   } catch(e) {
