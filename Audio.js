@@ -44,10 +44,16 @@ Audio.prototype.leave = async function(channel) {
   }
 };
 
-Audio.prototype.playFile = function(user, guild, channel, file) {
+Audio.prototype.playFile = async function(user, guild, channel, file) {
   if (this.channelId === -1)
-    this.join(user, guild, channel);
-  this.voiceConnection.play(file);
+    await this.join(user, guild, channel);
+  this.voiceConnection.play("./" + file);
+};
+
+Audio.prototype.playYT = async function(user, guild, channel, url) {
+  if (this.channelId === -1)
+    await this.join(user, guild, channel);
+  this.voiceConnection.play(ytdl(url, { quality: 'highestaudio' }));
 };
 
 module.exports = new Audio();

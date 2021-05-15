@@ -88,9 +88,19 @@ const COMMANDS = Object.freeze({
     disabled: false,
     showDisabled: true
   },
-  "play": { 
+  "playF": { 
     func: (props, user, channel, msg) => {
       Audio.playFile(user, msg.guild, channel, props[0]);
+    },
+    maxLevel: 0,
+    showPermissionError: true,
+    name: "play",
+    disabled: false,
+    showDisabled: true
+  },
+  "play": { 
+    func: (props, user, channel, msg) => {
+      Audio.playYT(user, msg.guild, channel, props[0]);
     },
     maxLevel: 0,
     showPermissionError: true,
