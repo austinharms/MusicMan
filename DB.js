@@ -8,7 +8,7 @@ const DB = function(path) {
   this.dbPath = path; 
 };
 
-DB.prototype.open = async function() {
+DB.prototype.open = function() {
   if (this.connected) {
     this.close();
   }
@@ -20,14 +20,22 @@ DB.prototype.open = async function() {
         if(err)
           reject(err.message);
       });
-    
-      if(!fileExists) {
-        //recreate db here
-        console.log("Database not found, Recreated");
-      }
-      
+        
       this.db = db;
       this.connected = true;
+      if(!fileExists) {
+        this.insert( `CREATE TABLE IF NOT EXISTS CommandPermissions (
+                      commandId INTEGER NOT NULL,
+                      guildId TEXT NOT NULL,
+                      disabled INTEGER,
+                      disabledMessage TEXT,
+                      permissionLevel INTEGER,
+                      permissionMessage TEXT,
+                      PRIMARY KEY ( commandId, guildId)
+                      );`);
+        console.log("Database not found, Recreated");
+      }
+
       resolve(db);
     } catch(e) {
       reject(e);
@@ -47,28 +55,32 @@ DB.prototype.close = function() {
   }
 };
 
-DB.prototype.query = async (queryString, params = []) => new Promise((resolve, reject) => {
-  if (!this.connected) {
-    reject("DB not Connected");
-    return;
-  }
+DB.prototype.query = function(queryString, params = []) {
+  return new Promise((resolve, reject) => {
+    if (!this.connected) {
+      reject("DB not Connected");
+      return;
+    }
 
-  this.db.all(queryString, params, (err, rows) => {
-    if (err) reject(err);
-    resolve(rows);
+    this.db.all(queryString, params, (err, rows) => {
+      if (err) reject(err);
+      resolve(rows);
+    });
   });
-});
+};
 
-DB.prototype.insert = async (insertString, params = []) => new Promise((resolve, reject) => {
-  if (!this.connected) {
-    reject("DB not Connected");
-    return;
-  }
+DB.prototype.insert = function(insertString, params = []) { 
+  return new Promise((resolve, reject) => {
+    if (!this.connected) {
+      reject("DB not Connected");
+      return;
+    }
 
-  db.run(insertString, params, err => {
-    if (err) reject(err);
-    resolve(true);
+    this.db.run(insertString, params, err => {
+      if (err) reject(err);
+      resolve(true);
+    });
   });
-})
+};
 
 module.exports = new DB("./bot.db");
