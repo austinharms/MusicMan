@@ -13,9 +13,10 @@ const parseCommand = msg => {
   if (CommandSession.sendSessionMsg(msg)) return;
   const props = msg.content.split(" ");
   const command = props.shift();
-  if (COMMANDS[command] !== undefined) {
+  if (COMMANDS[command]) {
     try {
-      COMMANDS[command](props, msg.author, msg.channel, msg);
+      const cmd = COMMANDS[command];
+      if (Permissions.checkPerm(cmd, msg.author, msg.channel)) cmd(props, msg.author, msg.channel, msg);
     } catch(e) {
       console.log("Error running command: " + command + " Error: " + e + " MSG ID: " + msg);
     }

@@ -20,8 +20,8 @@ Permissions.prototype.checkPerm = function(cmd, user, channel) {
 
   if (cmd.maxLevel === -1) return true;
 
-  const user = this.users.find(u => u.id === user.id);
-  if (!user || user.level > cmd.maxLevel) {
+  const foundUser = this.users.find(u => u.id === user.id);
+  if (!foundUser || foundUser.level > cmd.maxLevel) {
     if (cmd.showPermissionError)
       channel.send(`You dont have Permissions to use "${cmd.name}"`);
     return false;
