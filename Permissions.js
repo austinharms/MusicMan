@@ -41,8 +41,18 @@ Permissions.prototype.getCommandPermission = function(cmd) {
 
 Permissions.prototype.setCommandPermission = async function(cmdId, guildId, level, msg) {
   const res = await DB.insert(`INSERT OR REPLACE INTO CommandPermissions(commandId, guildId, permissionLevel, permissionMessage) VALUES (${cmdId}, ${guildId}, ${level}, '${msg}');`);
-  console.log(res);
   return res;
+};
+
+Permissions.prototype.setUserPermission = async function(userId, guildId, level) {
+  const res = await DB.insert(`INSERT OR REPLACE INTO UserPermissions(userId, guildId, permissionLevel) VALUES (${userId}, ${guildId}, ${level});`);
+  return res;
+};
+
+Permissions.prototype.getUserPermission = async function(userId, guildId) {
+  const res = await DB.insert(`SELECT * FROM UserPermissions WHERE userId == ${userId} AND guildId == ${guildId}`);
+  if (res.length > 0) return res[0].permissionLevel;
+  return -1;
 };
 
 Permissions.prototype.setCommandDisabled = async function(cmdId, guildId, disabled, msg) {
@@ -61,24 +71,14 @@ Permissions.prototype.checkDisabled = function(cmd) {
   return false;
 };
 
-Permissions.prototype.checkPerm = function(cmdId, userId, guildID) {
-  return true;
+Permissions.prototype.checkPermission = async function(cmd, userId, guildID) {
+  const cmdLevel = this.getCommandPermission(cmd);
+  if (cmdLevel === -1) return true;
+  const userLevel = await this.getUserPermission(userId, guildID);
+  if (userLevel <= cmdLevel && userLevel !== -1) return true;
 
-  if (cmd.disabled) {
-    if (cmd.showDisabled)
-      channel.send(`"${cmd.name}" Command is Disabled`);
-    return false;
-  }
-
-  if (cmd.maxLevel === -1) return true;
-
-  const foundUser = this.users.find(u => u.id === user.id);
-  if (!foundUser || foundUser.level > cmd.maxLevel) {
-    if (cmd.showPermissionError)
-      channel.send(`You dont have Permissions to use "${cmd.name}"`);
-    return false;
-  }
-
-  return true;
+  if (cmd.permissionMessage !== null && cmd.permissionMessage.length > 0)
+      return "Invalid Permission: " + cmd.permissionMessage;
+  return "Invalid Permission to use Command";
 };
 module.exports = new Permissions();

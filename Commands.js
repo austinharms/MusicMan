@@ -108,13 +108,17 @@ const COMMANDS = Object.freeze({
             if (props.length >= 3) {
               if (!isNaN(props[2])) {
                 const level = parseInt(props[2]);
-                if (level <= 1000 && level >= 1 || level === -1) {
+                const userLevel = await Permissions.getUserPermission(user.id, msg.guild.id);
+                if (userLevel !== -1 && level <= 1000 && level >= userLevel || level === -1) {
                   await Permissions.setCommandPermission(
                     cmd.id,
                     msg.guild.id,
                     level
                   );
                   UTILITIES.reactThumbsUp(msg);
+                  return;
+                } else {
+                  msg.reply("Invalid Permission to set Permission Level " + level);
                   return;
                 }
               }
@@ -131,6 +135,37 @@ const COMMANDS = Object.freeze({
                 '"'
             );
             return;
+          }
+        } else if (props[0].toLowerCase() === "user") {
+          const user = UTILITIES.getUserId(props[1]);
+          if (user !== false) {
+            if (props.length >= 3) {
+              if (!isNaN(props[2])) {
+                const level = parseInt(props[2]);
+                if (level <= 1000 && level >= 1 || level === -1) {
+                  await Permissions.setUserPermission(
+                    user,
+                    msg.guild.id,
+                    level
+                  );
+                  UTILITIES.reactThumbsUp(msg);
+                  return;
+                } else {
+                  msg.reply("Invalid Permission to set Permission Level: " + level);
+                  return;
+                }
+              }
+            } else {
+              const userLevel = await Permissions.getUserPermission(user, msg.guild.id);
+              msg.reply("User Permission Level is: " + userLevel);
+                  return;
+            }
+          } else {
+            msg.reply(
+              'Unable to Find User: "' +
+                props[1] +
+                '"'
+            );
           }
         }
       }
