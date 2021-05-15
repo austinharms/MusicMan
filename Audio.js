@@ -5,13 +5,14 @@ const Audio = function() {
   this.channelId = -1;
   this.channelName = "";
   this.errorEvent = () => this.leave();
+  this.react = "👍";
 }
 
 Audio.prototype.join = async function(msg, user, guild, channel) {
   try {
     const cId = guild.voiceStates.cache.get(user.id).channelID;
     if (cId === this.channelId) { 
-      channel.send(`Connected to ${this.channelName}`);
+      msg.react(this.react);
       return;
     } else if (this.channelId !== -1) {
       this.voiceConnection.disconnect();
@@ -28,8 +29,7 @@ Audio.prototype.join = async function(msg, user, guild, channel) {
     this.voiceConnection.on("failed", this.errorEvent);
     this.voiceConnection.on("disconnect", this.errorEvent);
 
-    msg.react(guild.emojis.cache.get("842943395226714132"));
-    channel.send(`Connected to ${this.channelName}`);
+    msg.react(this.react);
   } catch(e) {
     console.log("Error Connecting to voice chat: " + e);
     channel.send("Failed to Connect to Voice Channel");
@@ -60,7 +60,7 @@ Audio.prototype.playFile = async function(msg, user, guild, channel, file) {
   if (this.channelId === -1)
     await this.join(user, guild, channel);
   this.voiceConnection.play("./" + file);
-  msg.react(guild.emojis.cache.get("842943395226714132"));
+  msg.react(this.react);
   } catch(e) {
     console.log("Error Playing File to voice chat: " + e);
     channel.send("Failed to Play File");
@@ -72,7 +72,7 @@ Audio.prototype.playYT = async function(msg, user, guild, channel, url) {
   if (this.channelId === -1)
     await this.join(user, guild, channel);
   this.voiceConnection.play(ytdl(url, { quality: 'highestaudio' }));
-  msg.react(guild.emojis.cache.get("842943395226714132"));
+  msg.react(this.react);
   } catch(e) {
     console.log("Error Playing YT to voice chat: " + e);
     channel.send("Failed to Play Link");
