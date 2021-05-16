@@ -260,7 +260,7 @@ const COMMANDS = Object.freeze({
       UTILITIES.reactThumbsUp(msg);
     },
     name: "nick",
-    id: 15,
+    id: 16,
   }
 });
 
