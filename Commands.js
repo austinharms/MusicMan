@@ -216,29 +216,33 @@ const COMMANDS = Object.freeze({
   },
   help: {
     func: async (msg, props) => {
-      msg.reply(`\`\`\`Utility Bot Help:
-All Commands Start with "${process.env.CMD_PREFIX}".
-Command Parameters must be in order and separated by spaces,
-Parameters with * are Required.
-\nGeneral Commands:
-\thi: params: [user], says hi
-\tsay: params: [text to repeate], repeats params
-\tstart: params: none, unused command
-\ttic: params: none, unused command
-Spam Commands:
-\tgping: params [user, count], ghost pings user count times
-\tbping: params: [user, count], pings user count times
-\nAudio Commands:
-\tjoin: params: none, joins VC
-\tplay: params: [*url, bassboost: (-100, 100)], plays or adds to queue the url, can also bassboost the music,
-\tskip: params: none, skip the currently playing song (Bug: can take a while to skip a song),
-\tqueue: params: none, show the queue of songs to be played
-\tclear: params: none, clears all queued songs 
-\tleave: params: none, disconnects the bot from VC
-\nPermsission Commands:
-\tperm: params: [*permissionType: (cmd/user), *object to view permission of, level, msg], set's or viewa the permission of the object base on wether a level was provided and sets the invalid permission message
-\tdisable: params: [*command, msg], disables the provided command and sets the disabled message for it
-\tenable: params: [*command], enables the provided command\`\`\``);
+msg.channel.send({
+  embed: {
+  title: "Utility Bot Help",
+  color: "AQUA",
+  description:   `***All Commands Start with "${process.env.CMD_PREFIX}"***
+**_Command Parameters must be in order and separated by spaces, Parameters with \* are Required_**
+\n***General Commands***
+\t**hi**: params: [user], says hi
+\t**say**: params: [text to repeate], repeats params
+\t**start**: params: none, unused command
+\t**tic**: params: none, unused command
+\n***Spam Commands***
+\t**gping**: params [user, count], ghost pings user count times
+\t**bping**: params: [user, count], pings user count times
+\n***Audio Commands***
+\t**join**: params: none, joins VC
+\t**play**: params: [*url, bassboost: (-100, 100)], plays or adds to queue the url, can also bassboost the music,
+\t**skip**: params: none, skip the currently playing song (Bug: can take a while to skip a song),
+\t**queue**: params: none, show the queue of songs to be played
+\t**clear**: params: none, clears all queued songs 
+\t**leave**: params: none, disconnects the bot from VC
+\n_**Permsission Commands**_
+\t**perm**: params: [*permissionType: (cmd/user), *object to view permission of, level, msg], set's or viewa the permission of the object base on wether a level was provided and sets the invalid permission message
+\t**disable**: params: [*command, msg], disables the provided command and sets the disabled message for it
+\t**enable**: params: [*command], enables the provided command`
+  }
+});
     },
     name: "help",
     id: 14,
