@@ -89,9 +89,11 @@ Audio.prototype.viewQueue = function(msg, props) {
   let msgStr = "Playing:";
   msgStr += this.getSongDetails(con.playing);
   if (con.queue.length > 0) {
-    const page = 0;
+    const totalPages = Math.ceil(con.queue.length/10);
+    const page = UTILITIES.clampValue(((props.length > 0 && !isNaN(props[0]))?(parseInt(props[0]) - 1):0), 0, totalPages - 1);
     msgStr += "\nNext:";
-    msgStr +=con.queue.slice(0, 10).reduce((total, song, index) => total + this.getSongDetails(song, (page * 10) + (index + 1)), "");
+    msgStr +=con.queue.slice(page, page + 10).reduce((total, song, index) => total + this.getSongDetails(song, (page * 10) + (index + 1)), "");
+    msgStr += `\npage: ${page + 1}/${totalPages}`;
   } else {
     msgStr += "\nNothing Queued";
   }
