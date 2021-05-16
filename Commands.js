@@ -233,6 +233,8 @@ const COMMANDS = Object.freeze({
 \t**join**: params: none, joins VC
 \t**play**: params: [*url, bassboost: (-100, 100)], plays or adds to queue the url, can also bassboost the music,
 \t**skip**: params: [count], skip the currently playing song,
+\t**pause**: params: none, pauses the currently playing song,
+\t**resume**: params: none, resumes the currently playing song,
 \t**queue**: params: [page], show the queue of songs to be played
 \t**clear**: params: none, clears all queued songs 
 \t**leave**: params: none, disconnects the bot from VC
