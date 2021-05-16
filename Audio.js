@@ -62,7 +62,7 @@ Audio.prototype.play = function(guilId) {
     if (con.queue.length === 0) {
       con.playing = null;
       con.stream = null;
-      con.timeout = setTimeout(this.disconnect.bind(this, msg.guild.id), 300000);
+      con.timeout = setTimeout(this.disconnect.bind(this, guilId), 300000);
       return;
     }
 
