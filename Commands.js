@@ -216,11 +216,7 @@ const COMMANDS = Object.freeze({
   },
   help: {
     func: async (msg, props) => {
-msg.channel.send({
-  embed: {
-  title: "Utility Bot Help",
-  color: "AQUA",
-  description:   `***All Commands Start with "${process.env.CMD_PREFIX}"***
+      msg.channel.send(UTILITIES.embed("Utility Bot Help", `***All Commands Start with "${process.env.CMD_PREFIX}"***
 **_Command Parameters must be in order and separated by spaces, Parameters with \* are Required_**
 \n***General Commands***
 \t**hi**: params: [user], says hi
@@ -240,9 +236,7 @@ msg.channel.send({
 \n_**Permsission Commands**_
 \t**perm**: params: [*permissionType: (cmd/user), *object to view permission of, level, msg], set's or viewa the permission of the object base on wether a level was provided and sets the invalid permission message
 \t**disable**: params: [*command, msg], disables the provided command and sets the disabled message for it
-\t**enable**: params: [*command], enables the provided command`
-  }
-});
+\t**enable**: params: [*command], enables the provided command`));
     },
     name: "help",
     id: 14,

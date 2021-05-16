@@ -30,6 +30,16 @@ const UTILITIES = Object.freeze({
   clampValue: function(value, min, max) {
     return Math.min(Math.max(value, min), max);
   },
+  embed: function(title, description) {
+    return {
+      embed: {
+        title,
+        color: "AQUA",
+        description,
+      }
+    };
+  },
+
 });
 
 module.exports = UTILITIES;
