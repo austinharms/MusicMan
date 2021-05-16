@@ -5,7 +5,7 @@ const UTILITIES = Object.freeze({
       if (!isNaN(name) && name.length >= 17 && name.length <= 20) { //Check if given user id already
         return name;
       } else if (name.startsWith("<@!") && name.endsWith(">")) {
-        return this.getUserId(guild, substring(3, name.length - 1));
+        return this.getUserId(guild, name.substring(3, name.length - 1));
       } else if (name.match(/^.{2,32}#[0-9]{4}$/)) { //Check if user tag
         const gUser = guild.members.cache.find(gUser => gUser.user.username + "#" + gUser.user.discriminator === name);
         if (gUser) return gUser.user.id;
