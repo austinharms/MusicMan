@@ -78,9 +78,7 @@ const COMMANDS = Object.freeze({
   skip: {
     func: (msg, props) => {
       const count = (!isNaN(props[0]))?parseInt(props[0]):1;
-      for (let i = 0; i < count; ++i)
-        Audio.play(msg.guild.id);
-      UTILITIES.reactThumbsUp(msg);
+      Audio.skip(msg, count);
     },
     name: "skip",
     id: 7,

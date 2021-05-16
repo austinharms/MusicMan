@@ -13,7 +13,7 @@ Audio.prototype.join = async function(msg) {
     const channel = msg.member.voice.channel;
     if (this.connections[msg.guild.id] && channel.id === this.connections[msg.guild.id].id) return UTILITIES.reactThumbsUp(msg);
     if (this.connections[msg.guild.id]) this.disconnect(msg.guild.id);
-    const con = {queue: [], stream: null, playing: null, channel: msg.channel};
+    const con = {queue: [], stream: null, playing: null, channel: msg.channel, timeout: setTimeout(this.disconnect.bind(this, msg.guild.id), 300000)};
     con.voiceConnection = await channel.join();
     con.id = channel.id;
     con.errorEvent = this.disconnect.bind(this, msg.guild.id);
@@ -35,6 +35,7 @@ Audio.prototype.disconnect = function(guildId) {
     con.voiceConnection.removeListener("error", con.errorEvent);
     con.voiceConnection.removeListener("failed", con.errorEvent);
     con.voiceConnection.removeListener("disconnect", con.errorEvent);
+    if (con.timeout !== null) clearTimeout(con.timeout);
     if (con.stream !== null) con.stream.destroy();
     con.voiceConnection.disconnect();
     this.connections[guildId] = null;
@@ -61,6 +62,7 @@ Audio.prototype.play = function(guilId) {
     if (con.queue.length === 0) {
       con.playing = null;
       con.stream = null;
+      con.timeout = setTimeout(this.disconnect.bind(this, msg.guild.id), 300000);
       return;
     }
 
@@ -73,10 +75,25 @@ Audio.prototype.play = function(guilId) {
     });
     con.stream = con.voiceConnection.play(con.stream, { volume: 0.5 });
     con.stream.on("finish", this.play.bind(this, guilId));
+    if (con.timeout !== null) clearTimeout(con.timeout);
+    con.timeout = null;
   } catch(e) {
     console.log("Error Playing YT to voice chat: " + e);
-    con.channel.send("Failed to Play: " + con.playing.title);
+    if (con.playing !== null) con.channel.send("Failed to Play: " + con.playing.title);
     if (con.queue.length > 0) this.play(guilId);
+  }
+};
+
+Audio.prototype.skip = function(msg, count = 1) {
+  try {
+    const con = this.connections[msg.guild.id];
+    if (!con) return UTILITIES.reactThumbsUp(msg);
+    if (count > 1) con.queue = con.queue.slice(count - 1);
+    this.play(msg.guild.id);
+    UTILITIES.reactThumbsUp(msg)
+  } catch(e) {
+    console.log("Error Skipping song: " + e);
+    con.channel.send("Failed Skip Song");
   }
 };
 
