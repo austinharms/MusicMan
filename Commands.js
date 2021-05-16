@@ -47,8 +47,7 @@ const COMMANDS = Object.freeze({
   },
   gping: {
     func: async (msg, props) => {
-      const tag =
-        (props.length > 0 ? UTILITIES.getUserId(props[0]) : false) || msg.author.id;
+      const tag = UTILITIES.getUserId(msg.guild, props[0]) || msg.author.id;
       const count =
         props.length > 1 && !isNaN(props[1]) ? parseInt(props[1]) : 1;
       const messages = [];
@@ -60,8 +59,8 @@ const COMMANDS = Object.freeze({
   },
   bping: {
     func: (msg, props) => {
-      const tag =
-        (props.length > 0 ? UTILITIES.getUserId(props[0]) : false) || msg.author.id;
+      console.log(props);
+      const tag = UTILITIES.getUserId(msg.guild, props[0]) || msg.author.id;
       const count =
         props.length > 1 && !isNaN(props[1]) ? parseInt(props[1]) : 1;
       for (let i = 0; i < count; ++i) msg.channel.send(`<@${tag}>`);
