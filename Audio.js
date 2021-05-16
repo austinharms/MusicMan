@@ -1,4 +1,5 @@
 const ytdl = require('discord-ytdl-core');
+const ytpl = require('ytpl');
 const UTILITIES = require("./Utilities.js");
 const DB = require("./DB.js");
 
@@ -10,7 +11,7 @@ Audio.prototype.join = async function(msg) {
   try {
     if (!msg.member.voice.channel) return msg.reply("You Must be in a Voice Channel to run this Command");
     const channel = msg.member.voice.channel;
-    if (this.connections[msg.guild.id] && channel.id === this.connections[msg.guild.id].channelId) return UTILITIES.reactThumbsUp(msg);
+    if (this.connections[msg.guild.id] && channel.id === this.connections[msg.guild.id].id) return UTILITIES.reactThumbsUp(msg);
     if (this.connections[msg.guild.id]) this.disconnect(msg.guild.id);
     const con = {queue: [], stream: null, playing: null, channel: msg.channel};
     con.voiceConnection = await channel.join();
@@ -90,14 +91,23 @@ Audio.prototype.viewQueue = function(msg) {
     msgStr += "\n\nNothing Queued";
   }
 
-  msg.reply(msgStr);
+  msg.reply(msgStr.substring(0, 1900));
+ };
+
+ Audio.prototype.clear = function(msg) {
+  const connection = this.connections[msg.guild.id];
+  if (connection) {
+    connection.queue = [];
+    this.play(msg.guild.id);
+  }
+  UTILITIES.reactThumbsUp(msg);
  };
 
 Audio.prototype.addQueue = async function(msg, props) {
   if (!this.connections[msg.guild.id]) await this.join(msg);
   const connection = this.connections[msg.guild.id];
   const URL = props.shift();
-  if (!ytdl.validateURL(URL)) return msg.reply("Invalid URL");
+
   props = props.map(p => p.toLowerCase());
   const encoderArgs = [];
   const foundBass = props.findIndex(p => p === "bassboost");
@@ -105,16 +115,31 @@ Audio.prototype.addQueue = async function(msg, props) {
     const gain = isNaN(props[foundBass + 1])?15:UTILITIES.clampValue(parseInt(props[foundBass + 1]), -100, 100);
     encoderArgs.push('-af', "bass=g=" + gain);
   }
-  const info = await ytdl.getBasicInfo(URL);
-  connection.queue.push({
-    URL,
-    title: info.videoDetails.title,
-    length: parseInt(info.videoDetails.lengthSeconds),
-    encoderArgs
-  });
+
+  const listId = await ytpl.getPlaylistID(URL).catch(e => -1);
+  if (listId !== -1) {
+    const req = await ytpl(listId).catch(e => false);
+    if (req === false) return msg.reply("Failed to Load Playlist");
+    req.items.forEach(item => this.addQueueDirect(connection, item.url, item.title, item.lengthSeconds, encoderArgs));
+  } else if (ytdl.validateURL(URL)) {
+    const info = await ytdl.getBasicInfo(URL);
+    this.addQueueDirect(connection, URL, info.videoDetails.title, parseInt(info.videoDetails.lengthSeconds), encoderArgs);
+  } else {
+    return msg.send("Invalid URL");
+  }
+  
   if (connection.playing === null)
     this.play(msg.guild.id);
   UTILITIES.reactThumbsUp(msg);
+};
+
+Audio.prototype.addQueueDirect = function(connection, URL, title, length, encoderArgs) {
+  connection.queue.push({
+    URL,
+    title,
+    length,
+    encoderArgs
+  });
 };
 
 module.exports = new Audio();

@@ -233,6 +233,7 @@ Spam Commands:
 \tplay: params: [*url, bassboost: (-100, 100)], plays or adds to queue the url, can also bassboost the music,
 \tskip: params: none, skip the currently playing song (Bug: can take a while to skip a song),
 \tqueue: params: none, show the queue of songs to be played
+\tclear: params: none, clears all queued songs 
 \tleave: params: none, disconnects the bot from VC
 \nPermsission Commands:
 \tperm: params: [*permissionType: (cmd/user), *object to view permission of, level, msg], set's or viewa the permission of the object base on wether a level was provided and sets the invalid permission message
@@ -242,6 +243,13 @@ Spam Commands:
     name: "help",
     id: 14,
   },
+  clear: {
+    func: async (msg, props) => {
+      Audio.clear(msg);
+    },
+    name: "disable",
+    id: 11,
+  }
 });
 
 module.exports = COMMANDS;
