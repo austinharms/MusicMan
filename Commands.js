@@ -216,11 +216,11 @@ const COMMANDS = Object.freeze({
   },
   help: {
     func: async (msg, props) => {
-      msg.reply(`Utility Bot Help:
+      msg.reply(`\`\`\`Utility Bot Help:
 All Commands Start with "${process.env.CMD_PREFIX}".
 Command Parameters must be in order and separated by spaces,
 Parameters with * are Required.
-General Commands:
+\nGeneral Commands:
 \thi: params: [user], says hi
 \tsay: params: [text to repeate], repeats params
 \tstart: params: none, unused command
@@ -228,16 +228,16 @@ General Commands:
 Spam Commands:
 \tgping: params [user, count], ghost pings user count times
 \tbping: params: [user, count], pings user count times
-Audio Commands:
+\nAudio Commands:
 \tjoin: params: none, joins VC
 \tplay: params: [*url, bassboost: (-100, 100)], plays or adds to queue the url, can also bassboost the music,
 \tskip: params: none, skip the currently playing song (Bug: can take a while to skip a song),
 \tqueue: params: none, show the queue of songs to be played
 \tleave: params: none, disconnects the bot from VC
-Permsission Commands:
+\nPermsission Commands:
 \tperm: params: [*permissionType: (cmd/user), *object to view permission of, level, msg], set's or viewa the permission of the object base on wether a level was provided and sets the invalid permission message
 \tdisable: params: [*command, msg], disables the provided command and sets the disabled message for it
-\tenable: params: [*command], enables the provided command`);
+\tenable: params: [*command], enables the provided command\`\`\``);
     },
     name: "help",
     id: 14,
