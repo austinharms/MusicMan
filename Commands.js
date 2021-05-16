@@ -216,7 +216,7 @@ const COMMANDS = Object.freeze({
   },
   help: {
     func: async (msg, props) => {
-      msg.reply(`The Moderator Bot Help:
+      msg.reply(`Utility Bot Help:
 All Commands Start with "${process.env.CMD_PREFIX}".
 Command Parameters must be in order and separated by spaces,
 Parameters with * are Required.
