@@ -1,3 +1,4 @@
+const Readable = require('stream').Readable;
 const ytdl = require('discord-ytdl-core');
 const ytpl = require('ytpl');
 const UTILITIES = require("./Utilities.js");
@@ -61,6 +62,9 @@ Audio.prototype.play = async function(guilId) {
     if (con.queue.length === 0) {
       con.playing = null;
       con.stream = null;
+      const str = new Readable();
+      str.push(null);
+      con.voiceConnection.play(str, { volume: 0.5 });
       return;
     }
 
