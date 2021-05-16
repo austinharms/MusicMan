@@ -225,6 +225,7 @@ const COMMANDS = Object.freeze({
 \t**say**: params: [text to repeate], repeats params
 \t**start**: params: none, unused command
 \t**tic**: params: none, unused command
+\t**nick**: params: [user, name], set users nickname
 \n***Spam Commands***
 \t**gping**: params [user, count], ghost pings user count times
 \t**bping**: params: [user, count], pings user count times
@@ -247,8 +248,19 @@ const COMMANDS = Object.freeze({
     func: async (msg, props) => {
       Audio.clear(msg);
     },
-    name: "disable",
-    id: 11,
+    name: "clear",
+    id: 15,
+  },
+  nick: {
+    func: async (msg, props) => {
+      const user = UTILITIES.getUserId(msg.guild, props[0]);
+      if (user === false) return msg.reply(`Unable to Find User: "${props[0]}"`);
+      props.shift();
+      msg.guild.members.cache.get(user).setNickname(props.join(" "), "CMD Nick");
+      UTILITIES.reactThumbsUp(msg);
+    },
+    name: "nick",
+    id: 15,
   }
 });
 
