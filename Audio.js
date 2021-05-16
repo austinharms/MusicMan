@@ -79,19 +79,24 @@ Audio.prototype.play = async function(guilId) {
   }
 };
 
-Audio.prototype.viewQueue = function(msg) {
+Audio.prototype.getSongDetails = function(song, pos = -1) {
+  return "\n" + (pos===-1?"":`${pos}. `) + `[${song.title}](${song.URL}), Duration: ${song.length}s` + "\n";
+};
+
+Audio.prototype.viewQueue = function(msg, props) {
   const con = this.connections[msg.guild.id];
-  if (!con || con.playing === null && con.queue.length === 0) return msg.reply("Nothing Queued");
-  let msgStr = "Playing:\n";
-  msgStr += `\t${con.playing.title}, Duration: ${con.playing.length}s, URL: ${con.playing.URL}`;
+  if (!con || con.playing === null && con.queue.length === 0) return msg.reply(UTILITIES.embed("Queue", "Nothing Queued"));
+  let msgStr = "Playing:";
+  msgStr += this.getSongDetails(con.playing);
   if (con.queue.length > 0) {
-    msgStr += "\n\nQueue:";
-    msgStr +=con.queue.reduce((text, song, index) => text + `\n${index + 1}. ${song.title}, Duration: ${song.length}s, URL: ${song.URL}`, "");
+    const page = 0;
+    msgStr += "\nNext:";
+    msgStr +=con.queue.slice(0, 10).reduce((total, song, index) => total + this.getSongDetails(song, (page * 10) + (index + 1)), "");
   } else {
-    msgStr += "\n\nNothing Queued";
+    msgStr += "\nNothing Queued";
   }
 
-  msg.reply(msgStr.substring(0, 1900));
+  msg.channel.send(UTILITIES.embed("Queue", msgStr));
  };
 
  Audio.prototype.clear = function(msg) {
@@ -120,7 +125,7 @@ Audio.prototype.addQueue = async function(msg, props) {
   if (listId !== -1) {
     const req = await ytpl(listId).catch(e => false);
     if (req === false) return msg.reply("Failed to Load Playlist");
-    req.items.forEach(item => this.addQueueDirect(connection, item.url, item.title, item.lengthSeconds, encoderArgs));
+    req.items.forEach(item => this.addQueueDirect(connection, item.url, item.title, item.durationSec, encoderArgs));
   } else if (ytdl.validateURL(URL)) {
     const info = await ytdl.getBasicInfo(URL);
     this.addQueueDirect(connection, URL, info.videoDetails.title, parseInt(info.videoDetails.lengthSeconds), encoderArgs);

@@ -78,7 +78,9 @@ const COMMANDS = Object.freeze({
   },
   skip: {
     func: (msg, props) => {
-      Audio.play(msg.guild.id);
+      const count = (!isNaN(props[0]))?parseInt(props[0]):1;
+      for (let i = 0; i < count; ++i)
+        Audio.play(msg.guild.id);
       UTILITIES.reactThumbsUp(msg);
     },
     name: "skip",
@@ -86,7 +88,7 @@ const COMMANDS = Object.freeze({
   },
   queue: {
     func: (msg, props) => {
-      Audio.viewQueue(msg);
+      Audio.viewQueue(msg, props);
     },
     name: "queue",
     id: 13,
@@ -229,7 +231,7 @@ const COMMANDS = Object.freeze({
 \n***Audio Commands***
 \t**join**: params: none, joins VC
 \t**play**: params: [*url, bassboost: (-100, 100)], plays or adds to queue the url, can also bassboost the music,
-\t**skip**: params: none, skip the currently playing song (Bug: can take a while to skip a song),
+\t**skip**: params: [count], skip the currently playing song (Bug: can take a while to skip last song),
 \t**queue**: params: none, show the queue of songs to be played
 \t**clear**: params: none, clears all queued songs 
 \t**leave**: params: none, disconnects the bot from VC
