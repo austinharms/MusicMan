@@ -59,6 +59,7 @@ const login = () => new Promise((resolve, reject) => {
     console.log("DB Connected");
     const tag = await login();
     console.log("Bot Started with Tag: " + tag);
+    client.user.setActivity(PREFIX + "help", {type: "WATCHING"});
   } catch(e) {
     console.log("Error Starting Bot: " + e);
     DB.close();
