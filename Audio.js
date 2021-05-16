@@ -29,7 +29,7 @@ Audio.prototype.join = async function(msg) {
   }
 };
 
-Audio.prototype.disconnect = async function(guildId) {
+Audio.prototype.disconnect = function(guildId) {
   try {
     const con = this.connections[guildId];
     if (!con) return;
@@ -44,7 +44,7 @@ Audio.prototype.disconnect = async function(guildId) {
   }
 };
 
-Audio.prototype.leave = async function(msg) {
+Audio.prototype.leave = function(msg) {
   try {
     this.disconnect(msg.guild.id);
     UTILITIES.reactThumbsUp(msg);
@@ -54,7 +54,7 @@ Audio.prototype.leave = async function(msg) {
   }
 };
 
-Audio.prototype.play = async function(guilId) {
+Audio.prototype.play = function(guilId) {
   const con = this.connections[guilId];
   if (!con) return;
   try {
@@ -75,11 +75,32 @@ Audio.prototype.play = async function(guilId) {
       quality: 'highestaudio',
       filter: "audioonly",
     });
-    con.voiceConnection.play(con.stream, { volume: 0.5 }).on("finish", this.play.bind(this, guilId));
+    con.stream = con.voiceConnection.play(con.stream, { volume: 0.5 });
+    con.stream.on("finish", this.play.bind(this, guilId));
   } catch(e) {
     console.log("Error Playing YT to voice chat: " + e);
     con.channel.send("Failed to Play: " + con.playing.title);
     if (con.queue.length > 0) this.play(guilId);
+  }
+};
+
+Audio.prototype.pause = function(msg) {
+  try {
+    const con = this.connections[msg.guild.id];
+    if (con && con.stream !== null) con.stream.pause();
+    UTILITIES.reactThumbsUp(msg);
+  } catch(e) {
+    console.log("Error Pausing Stream: " + e);
+  }
+};
+
+Audio.prototype.resume = function(msg) {
+  try {
+    const con = this.connections[msg.guild.id];
+    if (con && con.stream !== null) con.stream.resume();
+    UTILITIES.reactThumbsUp(msg);
+  } catch(e) {
+    console.log("Error Resuming Stream: " + e);
   }
 };
 

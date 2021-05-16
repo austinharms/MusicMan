@@ -261,7 +261,21 @@ const COMMANDS = Object.freeze({
     },
     name: "nick",
     id: 16,
-  }
+  },
+  pause: {
+    func: async (msg, props) => {
+      Audio.pause(msg);
+    },
+    name: "pause",
+    id: 17,
+  },
+  resume: {
+    func: async (msg, props) => {
+      Audio.resume(msg);
+    },
+    name: "resume",
+    id: 18,
+  },
 });
 
 module.exports = COMMANDS;
