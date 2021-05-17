@@ -58,15 +58,18 @@ Audio.prototype.play = function(guilId) {
   if (!con) return;
   try {
     if (con.stream !== null) con.stream.destroy();
-    if (con.queue.length === 0) {
-      con.playing = null;
-      con.stream = null;
-      con.timeout = setTimeout(this.disconnect.bind(this, guilId), 300000);
-      return;
+
+    if (con.playing === null || !con.playing.loop) {
+      if (con.queue.length === 0) {
+        con.playing = null;
+        con.stream = null;
+        con.timeout = setTimeout(this.disconnect.bind(this, guilId), 300000);
+        return;
+      }
+
+      con.playing = con.queue.shift();
     }
 
-    if (con.playing === null || !con.playing.loop)
-      con.playing = con.queue.shift();
     con.stream = ytdl(con.playing.URL, {
       encoderArgs: con.playing.encoderArgs,
       fmt: "mp3",
@@ -193,7 +196,8 @@ Audio.prototype.addQueueDirect = function(connection, URL, title, length, encode
     URL,
     title,
     length,
-    encoderArgs
+    encoderArgs,
+    loop: false,
   });
 };
 
