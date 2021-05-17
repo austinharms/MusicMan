@@ -232,6 +232,7 @@ const COMMANDS = Object.freeze({
 \t**skip**: params: [count], skip the currently playing song,
 \t**pause**: params: none, pauses the currently playing song,
 \t**resume**: params: none, resumes the currently playing song,
+\t**loop**: params: none, toggles looping
 \t**queue**: params: [page], show the queue of songs to be played
 \t**clear**: params: none, clears all queued songs 
 \t**leave**: params: none, disconnects the bot from VC
@@ -275,6 +276,13 @@ const COMMANDS = Object.freeze({
     name: "resume",
     id: 18,
   },
+  loop: {
+    func: async (msg, props) => {
+      Audio.loop(msg);
+    },
+    name: "loop",
+    id: 19,
+  }
 });
 
 module.exports = COMMANDS;

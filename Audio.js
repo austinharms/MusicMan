@@ -1,7 +1,6 @@
 const ytdl = require('discord-ytdl-core');
 const ytpl = require('ytpl');
 const UTILITIES = require("./Utilities.js");
-const DB = require("./DB.js");
 
 const Audio = function() {
   this.connections = {};
@@ -66,7 +65,8 @@ Audio.prototype.play = function(guilId) {
       return;
     }
 
-    con.playing = con.queue.shift();
+    if (con.playing === null || !con.playing.loop)
+      con.playing = con.queue.shift();
     con.stream = ytdl(con.playing.URL, {
       encoderArgs: con.playing.encoderArgs,
       fmt: "mp3",
@@ -137,6 +137,16 @@ Audio.prototype.viewQueue = function(msg, props) {
   }
 
   msg.channel.send(UTILITIES.embed("Queue", msgStr));
+ };
+
+ Audio.prototype.loop = function(msg) {
+  const con = this.connections[msg.guild.id];
+  if (!con || con.playing === null) return msg.channel.send("Nothings Playing");
+  con.playing.loop = !con.playing.loop;
+  if (con.playing.loop)
+    return msg.channel.send("Looping Enabled");
+  else
+    return msg.channel.send("Looping Disabled");
  };
 
  Audio.prototype.clear = function(msg) {
