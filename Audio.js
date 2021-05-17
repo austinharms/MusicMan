@@ -170,7 +170,7 @@ Audio.prototype.addQueue = async function(msg, props) {
     const info = await ytdl.getBasicInfo(URL);
     this.addQueueDirect(connection, URL, info.videoDetails.title, parseInt(info.videoDetails.lengthSeconds), encoderArgs);
   } else {
-    return msg.send("Invalid URL");
+    return msg.channel.send("Invalid URL");
   }
   
   if (connection.playing === null)
