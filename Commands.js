@@ -234,6 +234,7 @@ const COMMANDS = Object.freeze({
 \t**resume**: params: none, resumes the currently playing song,
 \t**loop**: params: none, toggles looping
 \t**queue**: params: [page], show the queue of songs to be played
+\t**np**: params: none, show whats playing
 \t**clear**: params: none, clears all queued songs 
 \t**leave**: params: none, disconnects the bot from VC
 \n_**Permsission Commands**_
@@ -282,6 +283,13 @@ const COMMANDS = Object.freeze({
     },
     name: "loop",
     id: 19,
+  },
+  np: {
+    func: async (msg, props) => {
+      Audio.playing(msg);
+    },
+    name: "np",
+    id: 20,
   }
 });
 

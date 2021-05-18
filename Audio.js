@@ -53,6 +53,17 @@ Audio.prototype.leave = function(msg) {
   }
 };
 
+Audio.prototype.playing = function(msg) {
+  try {
+    const con = this.connections[msg.guild.id];
+    if (!con) return msg.channel.send(UTILITIES.embed("Playing", "Nothing"));
+    if (con.stream !== null) console.log(con.stream);
+  } catch(e) {
+    console.log("Error checking playing song: " + e);
+    if (!con) return msg.channel.send("Failed to Check Whats Playing");
+  }
+};
+
 Audio.prototype.play = function(guilId) {
   const con = this.connections[guilId];
   if (!con) return;
@@ -127,8 +138,8 @@ Audio.prototype.getSongDetails = function(song, pos = -1) {
 Audio.prototype.viewQueue = function(msg, props) {
   const con = this.connections[msg.guild.id];
   if (!con || con.playing === null && con.queue.length === 0) return msg.reply(UTILITIES.embed("Queue", "Nothing Queued"));
-  let msgStr = "Playing:";
-  msgStr += this.getSongDetails(con.playing);
+  let msgStr = "Playing" + (con.loop?"(Queue Looped):":":");
+  msgStr += this.getSongDetails(con.playing) + (con.playing.loop?"(Looped)":"");
   if (con.queue.length > 0) {
     const totalPages = Math.ceil(con.queue.length/10);
     const page = UTILITIES.clampValue(((props.length > 0 && !isNaN(props[0]))?(parseInt(props[0]) - 1):0), 0, totalPages - 1);
@@ -144,12 +155,12 @@ Audio.prototype.viewQueue = function(msg, props) {
 
  Audio.prototype.loop = function(msg) {
   const con = this.connections[msg.guild.id];
-  if (!con || con.playing === null) return msg.channel.send("Nothings Playing");
+  if (!con || con.playing === null) return msg.channel.send(UTILITIES.embed("Loop", "Nothings Playing"));
   con.playing.loop = !con.playing.loop;
   if (con.playing.loop)
-    return msg.channel.send("Looping Enabled");
+    return msg.channel.send(UTILITIES.embed("Loop", "Enabled"));
   else
-    return msg.channel.send("Looping Disabled");
+    return msg.channel.send(UTILITIES.embed("Loop", "Disabled"));
  };
 
  Audio.prototype.clear = function(msg) {
