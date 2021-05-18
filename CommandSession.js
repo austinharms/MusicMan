@@ -53,7 +53,7 @@ CommandSession.prototype.onTimeout = function(f) {
   this.timeoutFunc = f;
 };
 
-ConstantSourceNode.prototype.onStop = function(f) {
+CommandSession.prototype.onStop = function(f) {
   this.onStop = f;
 }
 
