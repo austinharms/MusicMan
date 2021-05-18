@@ -67,7 +67,7 @@ Audio.prototype.playing = function(msg) {
     playDuration /= 1000;
     playDuration = -Math.floor(playDuration);
     
-    let progressBar = ("=".repeat(UTILITIES.map(playDuration, 0, con.playing.length, 0, 10))) + "-------------------------";
+    let progressBar = ("=".repeat(UTILITIES.map(playDuration, 0, con.playing.length, 0, 20))) + "-------------------------";
     progressBar = "[" + progressBar.substring(0, 25) + "]";
     
     msg.channel.send(UTILITIES.embed("Playing", `${this.getSongDetails(con.playing)}\n${progressBar} ${UTILITIES.parseTime(playDuration)}/${UTILITIES.parseTime(con.playing.length)}${con.playing.loop?"\nLooped":""}`));
