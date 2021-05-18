@@ -12,9 +12,9 @@ const client = new Discord.Client();
 const parseCommand = async msg => {
   if (!msg.content.startsWith(PREFIX) || msg.author.bot || !msg.guild) return;
   msg.content = msg.content.substring(PREFIX.length);
-  if (CommandSession.sendSessionMsg(msg)) return;
   const props = msg.content.split(" ").filter(arg => arg.length > 0);
   const command = props.shift().toLowerCase();
+  if (CommandSession.sendSessionMsg(msg, command, props)) return;
   try {
     if (COMMANDS[command]) {
       
