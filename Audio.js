@@ -12,7 +12,7 @@ Audio.prototype.join = async function(msg) {
     const channel = msg.member.voice.channel;
     if (this.connections[msg.guild.id] && channel.id === this.connections[msg.guild.id].id) return UTILITIES.reactThumbsUp(msg);
     if (this.connections[msg.guild.id]) this.disconnect(msg.guild.id);
-    const con = {queue: [], stream: null, playing: null, channel: msg.channel, timeout: setTimeout(this.disconnect.bind(this, msg.guild.id), 300000)};
+    const con = {queue: [], stream: null, playing: null, channel: msg.channel, timeout: setTimeout(this.disconnect.bind(this, msg.guild.id), 300000), loop: false};
     con.voiceConnection = await channel.join();
     con.id = channel.id;
     con.errorEvent = this.disconnect.bind(this, msg.guild.id);
@@ -56,8 +56,21 @@ Audio.prototype.leave = function(msg) {
 Audio.prototype.playing = function(msg) {
   try {
     const con = this.connections[msg.guild.id];
-    if (!con) return msg.channel.send(UTILITIES.embed("Playing", "Nothing"));
-    if (con.stream !== null) console.log(con.stream);
+    if (!con || con.playing == null || con.stream === null) return msg.channel.send(UTILITIES.embed("Playing", "Nothing"));
+    let playDuration = con.stream.startTime?con.stream.startTime:new Date().getTime();
+    playDuration -= con.stream._pausedTime?con.stream._pausedTime:0;
+    if (con.paused === true) {
+      playDuration -= con.pauseTime;
+    } else {
+      playDuration -= new Date().getTime();
+    }
+    playDuration /= 1000;
+    playDuration = -Math.floor(playDuration);
+    
+    let progressBar = ("=".repeat(UTILITIES.map(playDuration, 0, con.playing.length, 0, 10))) + "-------------------------";
+    progressBar = "[" + progressBar.substring(0, 25) + "]";
+    
+    msg.channel.send(UTILITIES.embed("Playing", `${this.getSongDetails(con.playing)}\n${progressBar} ${UTILITIES.parseTime(playDuration)}/${UTILITIES.parseTime(con.playing.length)}${con.playing.loop?"\nLooped":""}`));
   } catch(e) {
     console.log("Error checking playing song: " + e);
     if (!con) return msg.channel.send("Failed to Check Whats Playing");
@@ -78,6 +91,7 @@ Audio.prototype.play = function(guilId) {
         return;
       }
 
+      if (con.loop) con.queue.push(con.playing);
       con.playing = con.queue.shift();
     }
 
@@ -114,7 +128,11 @@ Audio.prototype.skip = function(msg, count = 1) {
 Audio.prototype.pause = function(msg) {
   try {
     const con = this.connections[msg.guild.id];
-    if (con && con.stream !== null) con.stream.pause();
+    if (con && con.stream !== null) {
+      con.stream.pause();
+      con.pauseTime = new Date().getTime();
+      con.paused = true;
+    }
     UTILITIES.reactThumbsUp(msg);
   } catch(e) {
     console.log("Error Pausing Stream: " + e);
@@ -124,7 +142,11 @@ Audio.prototype.pause = function(msg) {
 Audio.prototype.resume = function(msg) {
   try {
     const con = this.connections[msg.guild.id];
-    if (con && con.stream !== null) con.stream.resume();
+    if (con && con.stream !== null) {
+       con.stream.resume();
+       con.paused = false;
+       con.pauseTime = null;
+    }
     UTILITIES.reactThumbsUp(msg);
   } catch(e) {
     console.log("Error Resuming Stream: " + e);
@@ -132,7 +154,7 @@ Audio.prototype.resume = function(msg) {
 };
 
 Audio.prototype.getSongDetails = function(song, pos = -1) {
-  return "\n" + (pos===-1?"":`${pos}. `) + `[${song.title}](${song.URL}), Duration: ${song.length}s` + "\n";
+  return "\n" + (pos===-1?"":`${pos}. `) + `[${song.title}](${song.URL}), Duration: ${UTILITIES.parseTime(song.length)}` + "\n";
 };
 
 Audio.prototype.viewQueue = function(msg, props) {
@@ -161,6 +183,16 @@ Audio.prototype.viewQueue = function(msg, props) {
     return msg.channel.send(UTILITIES.embed("Loop", "Enabled"));
   else
     return msg.channel.send(UTILITIES.embed("Loop", "Disabled"));
+ };
+
+ Audio.prototype.loopQueue = function(msg) {
+  const con = this.connections[msg.guild.id];
+  if (!con || con.playing === null && con.queue.length === 0) return msg.channel.send(UTILITIES.embed("Loop Queue", "Nothings Playing"));
+  con.loop = !con.loop;
+  if (con.loop)
+    return msg.channel.send(UTILITIES.embed("Loop Queue", "Enabled"));
+  else
+    return msg.channel.send(UTILITIES.embed("Loop Queue", "Disabled"));
  };
 
  Audio.prototype.clear = function(msg) {

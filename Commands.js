@@ -233,6 +233,7 @@ const COMMANDS = Object.freeze({
 \t**pause**: params: none, pauses the currently playing song,
 \t**resume**: params: none, resumes the currently playing song,
 \t**loop**: params: none, toggles looping
+\t**loopqueue**: params: none, toggles looping the current queue
 \t**queue**: params: [page], show the queue of songs to be played
 \t**np**: params: none, show whats playing
 \t**clear**: params: none, clears all queued songs 
@@ -289,6 +290,13 @@ const COMMANDS = Object.freeze({
       Audio.playing(msg);
     },
     name: "np",
+    id: 20,
+  },
+  loopqueue: {
+    func: async (msg, props) => {
+      Audio.loopQueue(msg);
+    },
+    name: "loopQueue",
     id: 20,
   }
 });

@@ -41,7 +41,14 @@ const UTILITIES = Object.freeze({
       }
     };
   },
-
+  map: function( x,  in_min,  in_max,  out_min,  out_max){
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+  },
+  parseTime: function(sec) {
+    const min = Math.floor(sec/60);
+    const sec = sec - (min * 60);
+    return `${min}:${sec.pad(2)}`;
+  }
 });
 
 module.exports = UTILITIES;
