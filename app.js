@@ -51,7 +51,6 @@ const parseCommand = async (msg) => {
         client.guilds.cache.forEach(guild => {
           servers += `${guild.name} | ${guild.id}\n`;
         });
-        console.log(servers);
         msg.reply(servers);
         break;
 
