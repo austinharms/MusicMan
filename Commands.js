@@ -2,6 +2,7 @@ const CommandSession = require("./CommandSession.js");
 const Audio = require("./Audio.js");
 const Permissions = require("./Permissions.js");
 const UTILITIES = require("./Utilities.js");
+const DB = require("./DB.js");
 
 const COMMANDS = Object.freeze({
   hi: {
@@ -26,16 +27,16 @@ const COMMANDS = Object.freeze({
   },
   start: {
     func: (msg, props) => {
-      const s = CommandSession.create(msg.channel, [], 10);
-      s.onTimeout((s) => {
-        s.channel.send("Command Session Timeout!");
-      });
+      // const s = CommandSession.create(msg.channel, [], 10);
+      // s.onTimeout((s) => {
+      //   s.channel.send("Command Session Timeout!");
+      // });
 
-      s.onMsg((s) => {
-        s.channel.send("Session Command");
-      });
+      // s.onMsg((s) => {
+      //   s.channel.send("Session Command");
+      // });
 
-      msg.channel.send("Command Session Started");
+      // msg.channel.send("Command Session Started");
     },
     name: "start",
     id: 2,
@@ -279,25 +280,35 @@ const COMMANDS = Object.freeze({
     id: 18,
   },
   loop: {
-    func: async (msg, props) => {
+    func: (msg, props) => {
       Audio.loop(msg);
     },
     name: "loop",
     id: 19,
   },
   np: {
-    func: async (msg, props) => {
+    func: (msg, props) => {
       Audio.playing(msg);
     },
     name: "np",
     id: 20,
   },
   loopqueue: {
-    func: async (msg, props) => {
+    func: (msg, props) => {
       Audio.loopQueue(msg);
     },
     name: "loopQueue",
-    id: 20,
+    id: 21,
+  },
+  autorole: {
+    func: async (msg, props) => {
+      await DB.insert(`INSERT OR REPLACE INTO ServerRoles(guildId, role) VALUES (${msg.guild.id}, '${props.join(" ")}');`);
+      UTILITIES.reactThumbsUp(msg);
+      const res = await DB.query(`SELECT * FROM ServerRoles WHERE guildId == ${msg.guild.id}`);
+      console.log(res);
+    },
+    name: "autoRole",
+    id: 22,
   }
 });
 

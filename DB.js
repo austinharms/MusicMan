@@ -31,12 +31,16 @@ DB.prototype.open = function() {
         permissionMessage TEXT,
         PRIMARY KEY ( commandId, guildId)
         );`);
-      this.insert( `CREATE TABLE IF NOT EXISTS UserPermissions (
-        userId INTEGER NOT NULL,
-        guildId TEXT NOT NULL,
-        permissionLevel INTEGER NOT NULL,
-        PRIMARY KEY ( userId, guildId)
-      );`);
+        this.insert( `CREATE TABLE IF NOT EXISTS UserPermissions (
+          userId INTEGER NOT NULL,
+          guildId TEXT NOT NULL,
+          permissionLevel INTEGER NOT NULL,
+          PRIMARY KEY ( userId, guildId)
+        );`);
+        this.insert( `CREATE TABLE IF NOT EXISTS ServerRoles (
+          guildId TEXT NOT NULL PRIMARY KEY,
+          role TEXT NOT NULL
+        );`);
       resolve(db);
     } catch(e) {
       reject(e);
