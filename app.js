@@ -20,7 +20,7 @@ discordClient.login(process.env.BOT_TOKEN).then(() => {
   console.log("Bot Tag: " + discordClient.user.tag);
   discordClient.on("ready", () => {
     console.log("Bot Ready");
-    discordClient.user.setActivity("~help", { type: "WATCHING" });
+    discordClient.user.setActivity(PREFIX + "help", { type: "WATCHING" });
     discordClient.on("message", validateMessage);
   });
 }).catch(e => console.log("Login Error: ", e));
