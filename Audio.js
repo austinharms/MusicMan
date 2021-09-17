@@ -323,6 +323,12 @@ Audio.prototype.playURL = async function(url, immediate) {
         },
       },
     });
+
+    if (rawSong.isLiveContent) {
+      this.server.sendError("Can\u0027t Play Live Videos", "User Error");
+      return false;
+    }
+
     const song = {
       url,
       title: rawSong.videoDetails.title,
