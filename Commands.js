@@ -309,6 +309,22 @@ const COMMANDS = Object.freeze({
     },
     name: "autoRole",
     id: 22,
+  },
+  role: {
+    func: async (msg, props) => {
+      try {
+      const user = UTILITIES.getUserId(msg.guild, props[0]);
+      const role = msg.guild.roles.cache.get(props[1]);
+      if (role === undefined) return msg.reply("Failed to find role");
+      await msg.guild.members.cache.get(user).roles.add(role);
+      UTILITIES.reactThumbsUp(msg);
+      } catch (e) {
+        console.log("Error failed to add role: " + e);
+        msg.reply("Failed to add role");
+      }
+    },
+    name: "role",
+    id: 23,
   }
 });
 

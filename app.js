@@ -45,30 +45,54 @@ const parseCommand = async (msg) => {
       );
     }
   } else if (msg.author.id === "492343238972145664") {
-    switch(msg.content.split(" ")[0]) {
-      case "~servers":
-        let servers = "Servers:\n";
-        client.guilds.cache.forEach(guild => {
-          servers += `${guild.name} | ${guild.id}\n`;
-        });
-        msg.reply(servers);
-        break;
+    try {
+      switch (msg.content.split(" ")[0]) {
+        case (PREFIX + "servers"):
+          let servers = "Servers:\n";
+          client.guilds.cache.forEach((guild) => {
+            servers += `${guild.name} | ${guild.id}\n`;
+          });
+          msg.reply(servers);
+          break;
 
-      default:
-        msg.reply("Unknown Command");
-        break;
+        case (PREFIX + "perm"):
+          if (isNaN(msg.content.split(" ")[1]) || isNaN(msg.content.split(" ")[2])) return msg.reply("Invalid Args");
+          Permissions.setUserPermission("492343238972145664", msg.content.split(" ")[1], msg.content.split(" ")[2]);
+          break;
+
+        case (PREFIX + "join"):
+          client.guilds.cache.get
+          break;
+
+        default:
+          msg.reply("Unknown Command");
+          break;
+      }
+    } catch (e) {
+      msg.reply(e.toString().substring(0, 2000));
     }
   }
 };
 
 client.on("message", parseCommand);
+client.on("guildmemberadd", member => {
+  console.log("Mem Add");
+  console.log(member);
 
-client.on('guildMemberAdd', async member => {
-  const res = await DB.query(`SELECT * FROM ServerRoles WHERE guildId == ${guildId}`);
-  console.log(res);
-  if (res.length > 0 && res[0] !== null && res[0].role !== null) {
-    member.guild.roles.find('name', res);
-    member.addRole(role);
+  try {
+    (async function() {
+      try {
+        const res = await DB.query(`SELECT * FROM ServerRoles WHERE guildId == ${member.guild.id}`);
+        if (res.length > 0 && res[0] !== null && res[0].role !== null) {
+          member.guild.roles.find("name", res);
+          member.addRole(role);
+        }
+      } catch(e) {
+        console.log("Error auto perm: " + e);
+      }
+    })();
+  } catch(e) {
+    console.log("Error auto perm: " + e);
   }
 });
 
