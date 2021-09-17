@@ -12,7 +12,7 @@ Server.prototype.getId = function() { return this.id; }
 
 Server.prototype.receivedMessage = async function(msg, prefix) {
   try {
-    if (msg.guildId !== this.id) throw new Error("Got Message with incorrect guildId");
+    if (msg.guild.id !== this.id) throw new Error("Got Message with incorrect guildId");
     this.msg = msg;
     this.channel = msg.channel;
     const msgParts = msg.content.split(" ");
