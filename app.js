@@ -24,7 +24,7 @@ const validateMessage = (msg) => {
     const readyEvent = new Promise(r => mainClient.on("ready", r));
     await mainClient.login(process.env.MAIN_TOKEN);
     await readyEvent;
-    await mainClient.user.setActivity("~help", { type: "WATCHING" });
+    await mainClient.user.setActivity(PREFIX + "help", { type: "WATCHING" });
     mainClient.on("message", validateMessage);
     Audio.addChannel(mainClient);
     console.log("Main Client Ready: " + mainClient.user.tag);
@@ -42,7 +42,7 @@ const validateMessage = (msg) => {
           const readyEvent = new Promise(r => channelClients[i].on("ready", r));
           await channelClients[i].login(channelTokens[i]);
           await readyEvent;
-          await channelClients[i].user.setActivity("~help", { type: "WATCHING" });
+          await channelClients[i].user.setActivity(PREFIX + "help", { type: "WATCHING" });
           Audio.addChannel(channelClients[i]);
           console.log("Channel Client Ready: " + channelClients[i].user.tag);
         } catch(e) {
