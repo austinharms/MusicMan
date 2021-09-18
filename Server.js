@@ -5,7 +5,38 @@ const Server = function (guildId) {
   this.channel = null;
   this.msg = null;
   this.id = guildId;
-  this.audio = new Audio(this);
+  this.audioClients = [];
+  for (let i = 0; i < Audio.getChannelCount(); ++i)
+    this.audioClients.push(new Audio(this, i));
+};
+
+Server.prototype.getCommandAudioInstance = function(msg) {
+  try {
+    let client = this.audioClients.find(a => a.checkUserInChat(msg.author.id));
+    if (client !== undefined) return client;
+    client = this.audioClients.find(a => !a.getConnected());
+    if (client !== undefined) return client;
+    this.sendError("Out of Bots to Join", "Out of Clients");
+    return false;
+  } catch(e) {
+    this.sendError("Failed to Run Audio Command", e);
+    return false;
+  }
+};
+
+Server.prototype.getCommandUserInVC = function(msg) {
+  try {
+    let client = this.audioClients.find(a => a.checkUserInChat(msg.author.id));
+    if (client === undefined) {
+      this.sendError("You Must be in a Bot VC to Run this Command", "User Error");
+      return false;
+    }
+
+    return true;
+  } catch(e) {
+    this.sendError("Failed to Run Audio Command", e);
+    return false;
+  }
 };
 
 Server.prototype.getId = function() { return this.id; }

@@ -1,7 +1,7 @@
 const ytdl = require("discord-ytdl-core");
 const ytpl = require("ytpl");
 const ytsr = require('ytsr');
-const Audio = function (parentServer) {
+const Audio = function (parentServer, channelNo) {
   this.server = parentServer;
   this.errorFuc = Audio.prototype.onError.bind(this);
   this.dcFuc = Audio.prototype.disconnectInternal.bind(this);
@@ -14,9 +14,33 @@ const Audio = function (parentServer) {
   this.currentSong = null;
   this.looped = false;
   this.queueLooped = false;
+  this.client = this.channels[channelNo];
 };
 
+Audio.prototype.channels = [];
+
 Audio.prototype.timeoutDuration = 60000;
+
+Audio.setChannels = function(...ch) {
+  Audio.prototype.channels = ch;
+};
+
+Audio.addChannel = function(c) {
+  Audio.prototype.channels.push(c);
+};
+
+Audio.getChannelCount = function() {
+  return Audio.prototype.channels.length;
+};
+
+Audio.prototype.getConnected = function() {
+  return this.voiceConnection !== null;
+};
+
+Audio.prototype.checkUserInChat = function(userId) {
+  if (!this.getConnected()) return false;
+  return this.voiceConnection.channel.members.has(userId);
+};
 
 Audio.prototype.joinInternal = async function(msg) {
   try {
@@ -32,6 +56,22 @@ Audio.prototype.joinInternal = async function(msg) {
     if (this.voiceConnection !== null && channel.id === this.voiceConnection.channel.id) return true;
     await this.disconnectInternal();
 
+    let guild = null;
+    try {
+      guild = await this.client.guilds.fetch(msg.guild.id);
+    } catch(e) {
+      this.server.sendError(`Bot: ${this.client.user.tag} Not Member of Server`, e);
+      return false;
+    }
+
+    try {
+      channel = guild.channels.resolve(channel.id);
+      if (channel === null) throw new Error("Failed to get Channel from Guild");
+    } catch(e) {
+      this.server.sendError(`Can not Connect to Voice Chat (Permission Error)`, e);
+      return false;
+    } 
+
     if (!channel.joinable) {
       this.server.sendError("Unable to Join Your Voice Chat", "Error: User Channel Not Joinable");
       return false;
@@ -41,7 +81,7 @@ Audio.prototype.joinInternal = async function(msg) {
     this.voiceConnection.on("error", this.errorFuc);
     this.voiceConnection.on("failed", this.errorFuc);
     this.voiceConnection.on("disconnect", this.dcFuc);
-    this.timeout = setTimeout(this.dcFuc, Audio.prototype.timeoutDuration);
+    this.timeout = setTimeout(this.dcFuc, this.timeoutDuration);
     return true;
   } catch (e) {
     this.server.sendError("Failed to Join Voice Chat", e);
@@ -381,13 +421,13 @@ Audio.prototype.playInternal = async function() {
     
         if (this.timeout !== null) { 
           clearTimeout(this.timeout);
-          this.timeout = setTimeout(this.dcFuc, Audio.prototype.timeoutDuration);
+          this.timeout = setTimeout(this.dcFuc, this.timeoutDuration);
         }
 
         throw new Error("Audio Stream Not Started");
       }
     } else {
-      this.timeout = setTimeout(this.dcFuc, Audio.prototype.timeoutDuration);
+      this.timeout = setTimeout(this.dcFuc, this.timeoutDuration);
     }
 
     return true;
