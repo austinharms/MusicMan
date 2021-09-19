@@ -34,8 +34,8 @@ const validateMessage = (msg) => {
   }
 
   try {
-    if (process.env.CHANNEL_BOT_TOKENS) {
-      const channelTokens = process.env.CHANNEL_BOT_TOKENS.split(",");
+    if (process.env.CHANNEL_TOKENS) {
+      const channelTokens = process.env.CHANNEL_TOKENS.split(",");
       for (let i = 0; i < channelTokens.length; ++i) {
         try {
           channelClients.push(new Discord.Client());
