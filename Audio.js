@@ -73,7 +73,7 @@ Audio.prototype.joinInternal = async function(msg) {
     } 
 
     if (!channel.joinable) {
-      this.server.sendError("Unable to Join Your Voice Chat", "Error: User Channel Not Joinable");
+      this.server.sendError("Unable to Join Your Voice Chat\n(Permission Error)", "Error: User Channel Not Joinable");
       return false;
     }
 
@@ -453,7 +453,7 @@ Audio.prototype.playStreamInternal = async function() {
   });
   this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
   this.stream.on("finish", this.endFuc);
-  for (let i = 0; i < 20; ++i) {
+  for (let i = 0; i < 35; ++i) {
     if (this.stream.startTime !== undefined) return true;
     await new Promise(r => setTimeout(r, 100));
   }
