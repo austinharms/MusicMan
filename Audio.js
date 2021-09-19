@@ -301,6 +301,14 @@ Audio.prototype.play = async function(params, msg, immediate = false) {
 
 Audio.prototype.playSearch = async function(search) {
   try {
+    if (!search || search.length === 0) {
+      this.server.sendError("Search Can\u0027t be Empty", "User Error");
+      return false;
+    } else if (search.length <= 2) {
+      this.server.sendError("Search Must be Longer Than 2 Characters", "User Error");
+      return false;
+    }
+
     const res = await ytsr(search, {
       safeSearch: false,
       limit: 5,
