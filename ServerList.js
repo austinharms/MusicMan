@@ -4,4 +4,5 @@ const getServer = Object.freeze((guildId) => {
   if (!(guildId in servers)) servers[guildId] = new Server(guildId);
   return servers[guildId];
 });
-module.exports = getServer;
+const hasServer = Object.freeze((guildId) =>  (guildId in servers));
+module.exports = { getServer, hasServer };
