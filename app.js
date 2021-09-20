@@ -1,9 +1,10 @@
 require("dotenv").config();
-const SERVERS = require("./ServerList");
-const PREFIX = process.env.CMD_PREFIX;
+const Servers = require("./ServerList");
 const Audio = require("./Audio");
-
+const BotError = require("./Error");
 const Discord = require('discord.js');
+
+const PREFIX = process.env.CMD_PREFIX;
 const mainClient = new Discord.Client();
 const channelClients = [];
 
@@ -12,9 +13,9 @@ const validateMessage = (msg) => {
   try {
     if (!msg.content.startsWith(PREFIX) || msg.author.bot || !msg.guild)
       return false;
-    SERVERS.getServer(msg.guild.id).receivedMessage(msg, PREFIX);
+    Servers.getServer(msg.guild.id).receivedMessage(msg, PREFIX);
   } catch (e) {
-    console.log("Msg Error: ", e);
+    BotError.createError("Msg Error", e, msg.author.id, msg.guild.id, "Root:validateMessage", false);
     return false;
   }
 };
@@ -29,7 +30,7 @@ const validateMessage = (msg) => {
     Audio.addChannel(mainClient);
     console.log("Main Client Ready: " + mainClient.user.tag);
   } catch(e) {
-    console.error("Main Client Failed to Start: " + e);
+    BotError.createError("Main Client Failed to Start", e, -1, -1, "Root:startMainClient", false);
     process.exit(-1);
   }
 
@@ -46,11 +47,11 @@ const validateMessage = (msg) => {
           Audio.addChannel(channelClients[i]);
           console.log("Channel Client Ready: " + channelClients[i].user.tag);
         } catch(e) {
-          console.error(`Channel Client ${i} Failed to Start: ${e}`);
+          BotError.createError(`Channel Client ${i} Failed to Start`, e, -1, -1, "Root:startChannelClient", false);
         }
       }
     }
   } catch(e) {
-    console.log("Failed to Start Channel Clients: " + e);
+    BotError.createError("Failed to Start Channel Clients", e, -1, -1, "Root:startChannelClients", false);
   }
 })();

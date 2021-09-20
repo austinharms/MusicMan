@@ -1,6 +1,8 @@
 const ytdl = require("discord-ytdl-core");
 const ytpl = require("ytpl");
 const ytsr = require('ytsr');
+const BotError = require("./Error");
+
 const Audio = function (parentServer, channelNo) {
   this.server = parentServer;
   this.errorFuc = Audio.prototype.onError.bind(this);
@@ -46,10 +48,11 @@ Audio.prototype.joinInternal = async function(msg) {
   try {
     let channel = null;
     try {
-      if (!msg.member.voice.channel) throw new Error("User Not in Voice Chat (User Error)");
+      if (!msg.member.voice.channel) throw new Error("User Not in Voice Chat");
       channel = msg.member.voice.channel;
     } catch (e) {
-      this.server.sendError("You Must Be in a Voice Chat to Use This Command", e);
+      const bError = BotError.createError("You Must Be in a Voice Chat to Use This Command", e, msg.author.id, msg.guild.id, "Audio:getUserVoiceChannel", true);
+      this.server.sendError(bError);
       return false;
     }
 
@@ -60,7 +63,8 @@ Audio.prototype.joinInternal = async function(msg) {
     try {
       guild = await this.client.guilds.fetch(msg.guild.id);
     } catch(e) {
-      this.server.sendError(`Bot: ${this.client.user.tag} Not Member of Server`, e);
+      const bError = BotError.createError(`Bot: ${this.client.user.tag} Not Member of Server`, e, msg.author.id, msg.guild.id, "Audio:getGuildOnClient", true);
+      this.server.sendError(bError);
       return false;
     }
 
@@ -68,12 +72,14 @@ Audio.prototype.joinInternal = async function(msg) {
       channel = guild.channels.resolve(channel.id);
       if (channel === null) throw new Error("Failed to get Channel from Guild");
     } catch(e) {
-      this.server.sendError(`Can not Connect to Voice Chat (Permission Error)`, e);
+      const bError = BotError.createError(`Can not Connect to Voice Chat\n(Permission Error)`, e, msg.author.id, msg.guild.id, "Audio:getChannelOnClient", true);
+      this.server.sendError(bError);
       return false;
     } 
 
     if (!channel.joinable) {
-      this.server.sendError("Unable to Join Your Voice Chat\n(Permission Error)", "Error: User Channel Not Joinable");
+      const bError = BotError.createError("Unable to Join Your Voice Chat\n(Permission Error)", new Error("User Channel Not Joinable"), msg.author.id, msg.guild.id, "Audio:joinChannelOnClient", true);
+      this.server.sendError(bError);
       return false;
     }
 
@@ -84,7 +90,8 @@ Audio.prototype.joinInternal = async function(msg) {
     this.timeout = setTimeout(this.dcFuc, this.timeoutDuration);
     return true;
   } catch (e) {
-    this.server.sendError("Failed to Join Voice Chat", e);
+    const bError = BotError.createError("Failed to Join Voice Chat", e, msg.author.id, msg.guild.id, "Audio:joinInternal", false);
+    this.server.sendError(bError);
     await this.disconnectInternal();
     return false;
   }
@@ -111,7 +118,8 @@ Audio.prototype.printCurrent = function() {
     this.server.sendEmbed("Playing:", `**${this.currentSong.title}**\n${this.currentSong.url}\n*Duration: ${this.currentSong.length}s*
     Progress: ${progressBar}, ${played}s/${this.currentSong.length}s`);
   } catch(e) {
-    this.server.sendError("Failed to Show Current Song Details", e);
+    const bError = BotError.createError("Failed to Show Current Song Details", e, this.server.msg.author.id, this.server.id, "Audio:printCurrent", false);
+    this.server.sendError(bError);
     return false;
   }
 };
@@ -136,7 +144,8 @@ Audio.prototype.togglePause = async function() {
 
     return true;
   } catch(e) {
-    this.server.sendError("Failed to Pause/Resume Song", e);
+    const bError = BotError.createError("Failed to Pause/Resume Song", e, this.server.msg.author.id, this.server.id, "Audio:togglePause", false);
+    this.server.sendError(bError);
     return false;
   }
 };
@@ -145,13 +154,15 @@ Audio.prototype.removeQueue = async function(params) {
   try {
     const strList = params.trim().split(" ");
     if (strList.length === 0) {
-      this.server.sendError("Invalid Song Index", "User Error");
+      const bError = BotError.createError("Invalid Song Index", new Error("Index not Present"), this.server.msg.author.id, this.server.id, "Audio:removeQueue", true);
+      this.server.sendError(bError);
       return false;
     }
 
     const index = parseInt(strList[0]);
     if (isNaN(index) || index < 1 || index > this.queue.length) {
-      this.server.sendError("Invalid Song Index", "User Error");
+      const bError = BotError.createError("Invalid Song Index", new Error("Index not Parsable"), this.server.msg.author.id, this.server.id, "Audio:removeQueue", true);
+      this.server.sendError(bError);
       return false;
     }
 
@@ -159,13 +170,15 @@ Audio.prototype.removeQueue = async function(params) {
     this.server.thumbsUp();
     return true;
   } catch(e) {
-    this.server.sendError("Failed to Remove Song", e);
+    const bError = BotError.createError("Failed to Remove Song", e, this.server.msg.author.id, this.server.id, "Audio:removeQueue", false);
+    this.server.sendError(bError);
     return false;
   }
 };
 
 Audio.prototype.onError = function(e) {
-  this.server.sendError("Error in Voice Chat, Disconnecting", e);
+  const bError = BotError.createError("Error in Voice Chat, Disconnecting", e, -1, this.server.id, "Audio:onError", false);
+  this.server.sendError(bError);
   this.disconnectInternal();
 };
 
@@ -197,7 +210,8 @@ Audio.prototype.disconnectInternal = async function() {
 
     return true;
   } catch(e) {
-    this.server.sendError("Failed to Disconnect", e);
+    const bError = BotError.createError("Failed to Disconnect", e, -1, this.server.id, "Audio:disconnectInternal", false);
+    this.server.sendError(bError);
     return false;
   }
 };
@@ -215,7 +229,8 @@ Audio.prototype.clearQueue = async function() {
       return true;
     }
   } catch(e) {
-    this.server.sendError("Failed to Clear Queue", e);
+    const bError = BotError.createError("Failed to Clear Queue", e, this.server.msg.id, this.server.id, "Audio:clearQueue", false);
+    this.server.sendError(bError);
   }
 
   return false;
@@ -225,8 +240,11 @@ Audio.prototype.toggleLoop = function() {
   try {
     this.looped = !this.looped;
     this.server.sendEmbed("Loop:", `Loop: ${this.looped?"Enabled":"Disabled"}`);
+    return true;
   } catch(e) {
-    this.server.sendError("Failed to Toggle Loop", e);
+    const bError = BotError.createError("Failed to Toggle Loop", e, this.server.msg.id, this.server.id, "Audio:toggleLoop", false);
+    this.server.sendError(bError);
+    return false;
   }
 };
 
@@ -234,8 +252,11 @@ Audio.prototype.toggleQueueLoop = function() {
   try {
     this.queueLooped = !this.queueLooped;
     this.server.sendEmbed("Loop:", `Queue Loop: ${this.queueLooped?"Enabled":"Disabled"}`);
+    return true;
   } catch(e) {
-    this.server.sendError("Failed to Toggle Queue Loop", e);
+    const bError = BotError.createError("Failed to Toggle Queue Loop", e, this.server.msg.id, this.server.id, "Audio:toggleQueueLoop", false);
+    this.server.sendError(bError);
+    return false;
   }
 };
 
@@ -251,7 +272,8 @@ Audio.prototype.printQueue = function() {
     this.server.sendEmbed("Queue:", `${queueString}${(this.queue.length > 20)?"and More...\n":""}Song Count: ${this.queue.length}\tSong Duration: ${duration}s`);
     return true;
   } catch(e) {
-    this.server.sendError("Failed to Print Queue", e);
+    const bError = BotError.createError("Failed to Print Queue", e, this.server.msg.id, this.server.id, "Audio:printQueue", false);
+    this.server.sendError(bError);
     return false;
   }
 };
@@ -268,7 +290,8 @@ Audio.prototype.skip = async function() {
       return true;
     }
   } catch(e) {
-    this.server.sendError("Failed to Skip Song", e);
+    const bError = BotError.createError("Failed to Skip Song", e, this.server.msg.id, this.server.id, "Audio:skip", false);
+    this.server.sendError(bError);
   }
 
   return false;
@@ -280,32 +303,40 @@ Audio.prototype.disconnect = async function() {
 
 Audio.prototype.play = async function(params, msg, immediate = false) {
   if (this.voiceConnection === null) {
-    if (!await this.joinInternal(msg)) return;
+    if (!await this.joinInternal(msg)) return false;
   }
 
   const url = params.trim();
   const urlTest = new RegExp(/^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/gm);
   if (urlTest.test(url)) {
     if (ytpl.validateID(url)) {
-      if (await this.playPlaylist(url))
+      if (await this.playPlaylist(url)) {
         this.server.thumbsUp();
+        return true;
+      }
     } else {
-      if (await this.playURL(url, immediate))
+      if (await this.playURL(url, immediate)) {
         this.server.thumbsUp();
+        return true;
+      }
     }
   } else {
-    if (await this.playSearch(url))
+    if (await this.playSearch(url)) {
       this.server.thumbsUp();
+      return true;
+    }
   }
 };
 
 Audio.prototype.playSearch = async function(search) {
   try {
     if (!search || search.length === 0) {
-      this.server.sendError("Search Can\u0027t be Empty", "User Error");
+      const bError = BotError.createError("Search Can\u0027t be Empty", new Error("Search String Empty"), this.server.msg.id, this.server.id, "Audio:playSearch", true);
+      this.server.sendError(bError);
       return false;
     } else if (search.length <= 2) {
-      this.server.sendError("Search Must be Longer Than 2 Characters", "User Error");
+      const bError = BotError.createError("Search Must be Longer Than 2 Characters", new Error("Search String Too Short"), this.server.msg.id, this.server.id, "Audio:playSearch", true);
+      this.server.sendError(bError);
       return false;
     }
 
@@ -316,7 +347,8 @@ Audio.prototype.playSearch = async function(search) {
     });
     const video = res.items.find(i => i.type === "video" && !i.isUpcoming && !i.isLive && i.views > 0 && i.url);
     if (!video) {
-      this.server.sendError("Failed to Find a Video", "User Error");
+      const bError = BotError.createError("Failed to Find a Video", new Error("No Videos in Search Results"), this.server.msg.id, this.server.id, "Audio:playSearch", true);
+      this.server.sendError(bError);
       return false;
     }
 
@@ -327,7 +359,8 @@ Audio.prototype.playSearch = async function(search) {
       return false;
     }
   } catch(e) {
-    this.server.sendError("Failed to Search", e);
+    const bError = BotError.createError("Failed to Search", e, this.server.msg.id, this.server.id, "Audio:playSearch", false);
+    this.server.sendError(bError);
     return false;
   }
 };
@@ -335,7 +368,8 @@ Audio.prototype.playSearch = async function(search) {
 Audio.prototype.playPlaylist = async function(url) {
   try {
     if (!ytpl.validateID(url)) {
-      this.server.sendError("Invalid Playlist URL", "User Error");
+      const bError = BotError.createError("Invalid Playlist URL", new Error("Failed to Parse Playlist ID from URL"), this.server.msg.id, this.server.id, "Audio:playPlaylist", true);
+      this.server.sendError(bError);
       return false;
     }
     const songs = (await ytpl(url)).items.map(s => ({
@@ -351,7 +385,8 @@ Audio.prototype.playPlaylist = async function(url) {
 
     return true;
   } catch(e) {
-    this.server.sendError("Failed to Play Playlist URL", e);
+    const bError = BotError.createError("Failed to Play Playlist URL", e, this.server.msg.id, this.server.id, "Audio:playPlaylist", false);
+    this.server.sendError(bError);
     return false;
   }
 };
@@ -359,7 +394,8 @@ Audio.prototype.playPlaylist = async function(url) {
 Audio.prototype.playURL = async function(url, immediate) {
   try {
     if (!ytdl.validateURL(url)) {
-      this.server.sendError("Invalid URL", "User Error");
+      const bError = BotError.createError("Invalid URL", new Error("Failed to Parse Video ID from URL"), this.server.msg.id, this.server.id, "Audio:playURL", true);
+      this.server.sendError(bError);
       return false;
     }
 
@@ -373,7 +409,8 @@ Audio.prototype.playURL = async function(url, immediate) {
     });
 
     if (rawSong.isLiveContent) {
-      this.server.sendError("Can\u0027t Play Live Videos", "User Error");
+      const bError = BotError.createError("Can\u0027t Play Live Videos", new Error("Video Object was Live, Can\u0027t play Live Streams"), this.server.msg.id, this.server.id, "Audio:playURL", true);
+      this.server.sendError(bError);
       return false;
     }
 
@@ -396,7 +433,8 @@ Audio.prototype.playURL = async function(url, immediate) {
 
     return true;
   } catch(e) {
-    this.server.sendError("Failed to Play URL", e);
+    const bError = BotError.createError("Failed to Play URL", e, this.server.msg.id, this.server.id, "Audio:playURL", false);
+    this.server.sendError(bError);
     return false;
   }
 }
@@ -440,7 +478,8 @@ Audio.prototype.playInternal = async function() {
 
     return true;
   } catch(e) {
-    this.server.sendError("Failed to Play Song", e);
+    const bError = BotError.createError("Failed to Play Song", e, -1, this.server.id, "Audio:playInternal", false);
+    this.server.sendError(bError);
     return false;
   }
 };
@@ -479,7 +518,8 @@ Audio.prototype.songEnd = async function() {
 
     await this.playInternal();
   } catch(e) {
-    this.server.sendError("Failed to Play Next Song", e);
+    const bError = BotError.createError("Failed to Play Next Song", e, -1, this.server.id, "Audio:songEnd", false);
+    this.server.sendError(bError);
   }
 };
 
