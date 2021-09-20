@@ -19,4 +19,12 @@ BotError.getErrors = () => {
   return errors;
 };
 
+BotError.getGuildErrors = (guildId) => {
+  return errors.filter(e => e.guildId == guildId);
+};
+
+BotError.getUserErrors = (userId) => {
+  return errors.filter(e => e.userId == userId);
+};
+
 module.exports = BotError;
