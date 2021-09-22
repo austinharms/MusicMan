@@ -22,7 +22,7 @@ BotError.getErrors = () => {
 };
 
 BotError.getTrueErrors = () => {
-  return errors.filter(e => !e.userError);
+  return errors.filter(e => !e.isUserError);
 };
 
 BotError.getGuildErrors = (guildId) => {

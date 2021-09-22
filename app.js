@@ -19,7 +19,7 @@ const validateMessage = (msg) => {
     } else if(msg.author.id == 492343238972145664) {
       try {
         if (msg.content.startsWith(PREFIX + "errors")) {
-          msg.channel.send("Errors: \n" + BotError.getTrueErrors().slice(-5).reduce((errs, e) => errs + BotError.getErrorString(e), ""));
+          msg.channel.send("Errors: \n" + BotError.getTrueErrors().slice(-5).reduce((errs, e) => errs + BotError.getErrorString(e) + "\n", ""));
         } else if (msg.content.startsWith(PREFIX + "allerrors")) {
           msg.channel.send("Errors: \n" + BotError.getErrors().slice(-5).reduce((errs, e) => errs + BotError.getErrorString(e), ""));
         } else if (msg.content.startsWith(PREFIX + "dump")) {
