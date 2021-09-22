@@ -17,10 +17,18 @@ const validateMessage = (msg) => {
     if (msg.guild) {
       Servers.getServer(msg.guild.id).receivedMessage(msg, PREFIX);
     } else if(msg.author.id == 492343238972145664) {
-      if (msg.content.startsWith(PREFIX + "errors")) {
-        msg.channel.send("Errors: \n" + BotError.getTrueErrors().slice(-5).reduce((errs, e) => errs + BotError.getErrorString(e), ""));
-      } else if (msg.content.startsWith(PREFIX + "allerrors")) {
-        msg.channel.send("Errors: \n" + BotError.getErrors().slice(-5).reduce((errs, e) => errs + BotError.getErrorString(e), ""));
+      try {
+        if (msg.content.startsWith(PREFIX + "errors")) {
+          msg.channel.send("Errors: \n" + BotError.getTrueErrors().slice(-5).reduce((errs, e) => errs + BotError.getErrorString(e), ""));
+        } else if (msg.content.startsWith(PREFIX + "allerrors")) {
+          msg.channel.send("Errors: \n" + BotError.getErrors().slice(-5).reduce((errs, e) => errs + BotError.getErrorString(e), ""));
+        } else if (msg.content.startsWith(PREFIX + "dump")) {
+          BotError.dumpErrors();
+          msg.channel.send("Dumped Errors");
+        }
+      } catch(e) {
+        BotError.createError("Admin Error", e, msg.author.id, -1, "Root:adminCommands", false);
+        return false;
       }
     }
   } catch (e) {
