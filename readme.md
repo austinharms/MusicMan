@@ -22,3 +22,14 @@ Options
 `YT_COOKIE` The cookies sent when getting a video, Required for restricted videos, can be found in the network tab in a web browser when loading a video under the cookies header  
 
 `YT_ID` The user id used when getting a video, Required for restricted videos, can be found in the network tab in a web browser when loading a video under the x-youtube-identity-token header  
+
+### Example
+```
+MAIN_TOKEN="1234567890"
+CHANNEL_TOKENS="1234567890,1234567890,1234567890"
+YT_COOKIE="COOKIES"
+YT_ID="1234567890"
+CMD_PREFIX="~"
+LOG_MODE="ERROR"
+ADMINS="492343238972145664,492343238972145664"
+```
