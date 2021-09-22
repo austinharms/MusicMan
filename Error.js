@@ -6,6 +6,7 @@ const BotError = function(displayMsg, error, userId, guildId, location, userErro
   this.guildId = guildId;
   this.location = location;
   this.isUserError = userError;
+  this.time = new Date().getTime();
 };
 
 BotError.createError = (displayMsg, error, userId, guildId, location, userError) => {
