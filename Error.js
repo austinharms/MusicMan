@@ -46,7 +46,7 @@ BotError.dumpErrors = () => {
 };
 
 BotError.getErrorString = (error) => {
-  return `Msg: ${errors.msg}\nError: ${error.error}\nUser: ${error.userId}\nGuild: ${error.guildId}\nLoc: ${error.location}\nTime: ${error.time}\nUserError: ${error.userError}`;
+  return `Msg: ${error.msg}\nError: ${error.error}\nUser: ${error.userId}\nGuild: ${error.guildId}\nLoc: ${error.location}\nTime: ${error.time}\nUserError: ${error.isUserError}`;
 };
 
 module.exports = BotError;
