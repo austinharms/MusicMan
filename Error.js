@@ -13,7 +13,8 @@ BotError.createError = (displayMsg, error, userId, guildId, location, userError)
   const e = new BotError(displayMsg, error, userId, guildId, location, userError);
   errors.push(e);
   if (errors.length > 1000) errors.shift();
-  if (!e.isUserError) console.log(e);
+  if(BotError.logAll || !e.isUserError && BotError.LogError)
+    console.log(e);
   return e;
 };
 
@@ -47,6 +48,24 @@ BotError.dumpErrors = () => {
 
 BotError.getErrorString = (error) => {
   return `Msg: ${error.msg}\nError: ${error.error}\nUser: ${error.userId}\nGuild: ${error.guildId}\nLoc: ${error.location}\nTime: ${error.time}\nUserError: ${error.isUserError}`;
+};
+
+BotError.setLogMode = (mode) => {
+  switch(mode) {
+    case "ALL":
+      BotError.logAll = true;
+      break;
+
+    case "ERROR":
+      BotError.logAll = false;
+      BotError.LogError = true;
+      break;
+
+      case "NONE":
+        BotError.logAll = false;
+        BotError.LogError = false;
+        break;
+  }
 };
 
 module.exports = BotError;

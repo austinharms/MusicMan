@@ -5,8 +5,19 @@ const BotError = require("./Error");
 const Discord = require('discord.js');
 
 const PREFIX = process.env.CMD_PREFIX;
+const ADMINS = [];
 const mainClient = new Discord.Client();
 const channelClients = [];
+
+if (process.env.ADMINS) {
+  ADMINS.push(...process.env.ADMINS.split(","));
+}
+
+if (process.env.LOG_MODE) {
+  BotError.setLogMode(process.env.LOG_MODE);
+} else {
+  BotError.setLogMode("ERRORS");
+}
 
 
 const validateMessage = (msg) => {
@@ -16,7 +27,7 @@ const validateMessage = (msg) => {
 
     if (msg.guild) {
       Servers.getServer(msg.guild.id).receivedMessage(msg, PREFIX);
-    } else if(msg.author.id == 492343238972145664) {
+    } else if(ADMINS.includes(msg.author.id)) {
       try {
         if (msg.content.startsWith(PREFIX + "errors")) {
           msg.channel.send("Errors: \n" + BotError.getTrueErrors().slice(-5).reduce((errs, e) => errs + BotError.getErrorString(e) + "\n", ""));
