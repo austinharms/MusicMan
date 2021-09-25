@@ -17,6 +17,7 @@ const Audio = function (parentServer, channelNo) {
   this.looped = false;
   this.queueLooped = false;
   this.client = this.channels[channelNo];
+  this.args = null;
 };
 
 Audio.prototype.channels = [];
@@ -33,6 +34,106 @@ Audio.addChannel = function(c) {
 
 Audio.getChannelCount = function() {
   return Audio.prototype.channels.length;
+};
+
+Audio.prototype.bassBoost = function(params) {
+  try {
+    let val = 20;
+    if (params && params.length > 0) {
+      const val = parseInt(params.trim());
+      if (isNaN(val)) {
+        const bError = BotError.createError("Invalid BassBoost Value", e, this.server.msg.author.id, this.server.id, "Audio:bassBoost", true);
+        this.server.sendError(bError);
+        return false;
+      }
+    }
+
+    if (this.setArgInternal("bass", val)) {
+      this.server.thumbsUp();
+      if (this.stream !== null)
+        this.server.sendEmbed("BassBoost", "***Note*** this will **not** be applied to the current song");
+
+      return true;
+    }
+  } catch(e) {
+    const bError = BotError.createError("Failed to BassBoost", e, this.server.msg.author.id, this.server.id, "Audio:bassBoost", false);
+    this.server.sendError(bError);
+  }
+
+  return false;
+};
+
+Audio.prototype.resetArgs = function() {
+  try {
+    if (this.resetArgsInternal()) {
+      this.server.thumbsUp();
+      return true;
+    }
+  } catch(e) {
+    const bError = BotError.createError("Failed to reset audio modifiers", e, this.server.msg.author.id, this.server.id, "Audio:resetArgs", false);
+    this.server.sendError(bError);
+  }
+
+  return false;
+};
+
+Audio.prototype.resetArgsInternal = function() {
+  try {
+    this.args = {
+      bass: {
+        value: 0,
+        arg: "bass=g=",
+        min: -50,
+        max: 50
+      }
+    };
+
+    return true;
+  } catch(e) {
+    const bError = BotError.createError("Failed to reset args", e, -1, this.server.id, "Audio:resetArgsInternal", false);
+    this.server.sendError(bError);
+    return false;
+  }
+};
+
+Audio.prototype.getArgList = function() {
+  if (this.args === null && !this.resetArgsInternal()) return [];
+  const argList = ["-af"];
+  for (const key of Object.keys(this.args)) {
+    argList.push(`${this.args[key].arg + this.args[key].value}`);
+  }
+
+  return argList;
+};
+
+Audio.prototype.setArgInternal = function(name, value) {
+  try {
+    if (this.args === null && !this.resetArgsInternal()) return false;
+    if (name in this.args) {
+      value = parseInt(value);
+      if (isNaN(value)) {
+        const bError = BotError.createError("Failed to set " + name + " arg", new Error("failed to parse value"), -1, this.server.id, "Audio:setArgInternal", true);
+        this.server.sendError(bError);
+        return false;
+      }
+
+      if (value > this.args[name].max)
+        value = this.args[name].max;
+      if (value < this.args[name].min)
+        value = this.args[name].min;
+      this.args[name].value = value;
+    } else {
+      const bError = BotError.createError("Failed to set " + name + " arg", new Error("arg dose not exist"), -1, this.server.id, "Audio:setArgInternal", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    return true;
+  } catch(e) {
+    const bError = BotError.createError("Failed to set " + name + " arg", e, -1, this.server.id, "Audio:setArgInternal", false);
+    this.server.sendError(bError);
+    return false;
+  }
 };
 
 Audio.prototype.getConnected = function() {
@@ -103,6 +204,8 @@ Audio.prototype.join = async function (msg) {
 
 Audio.prototype.printCurrent = function() {
   try {
+    console.log(this.args);
+    console.log(this.getArgList());
     if (this.currentSong === null || this.stream === null) {
       this.server.sendEmbed("Playing:", "Nothing");
       return true;
@@ -376,7 +479,6 @@ Audio.prototype.playPlaylist = async function(url) {
       url: s.shortUrl,
       title: s.title,
       length: s.durationSec,
-      encoderArgs: [],
     }));
     this.queue.push(...songs);
     if (this.currentSong === null) {
@@ -418,7 +520,6 @@ Audio.prototype.playURL = async function(url, immediate) {
       url,
       title: rawSong.videoDetails.title,
       length: parseInt(rawSong.videoDetails.lengthSeconds),
-      encoderArgs: [],
     };
 
     if (immediate) {
@@ -487,7 +588,7 @@ Audio.prototype.playInternal = async function() {
 Audio.prototype.playStreamInternal = async function() {
   if (this.stream !== null) this.stream.destroy();
   this.stream = await ytdl(this.currentSong.url, {
-    encoderArgs: this.currentSong.encoderArgs,
+    encoderArgs: this.getArgList(),
     fmt: "mp3",
     quality: 'highestaudio',
     filter: "audioonly",

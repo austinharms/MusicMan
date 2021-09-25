@@ -4,7 +4,8 @@ const Audio = require("./Audio");
 const BotError = require("./Error");
 const Discord = require('discord.js');
 
-const PREFIX = process.env.CMD_PREFIX;
+const DEVMODE = process.env.NODE_ENV && process.env.NODE_ENV === "development";
+const PREFIX = (DEVMODE?"dev":"") + process.env.CMD_PREFIX;
 const ADMINS = [];
 const mainClient = new Discord.Client();
 const channelClients = [];
@@ -18,7 +19,6 @@ if (process.env.LOG_MODE) {
 } else {
   BotError.setLogMode("ERRORS");
 }
-
 
 const validateMessage = (msg) => {
   try {
@@ -53,7 +53,8 @@ const validateMessage = (msg) => {
     const readyEvent = new Promise(r => mainClient.on("ready", r));
     await mainClient.login(process.env.MAIN_TOKEN);
     await readyEvent;
-    await mainClient.user.setActivity(PREFIX + "help", { type: "WATCHING" });
+    if (!DEVMODE)
+      await mainClient.user.setActivity(PREFIX + "help", { type: "WATCHING" });
     mainClient.on("message", validateMessage);
     Audio.addChannel(mainClient);
     console.log("Main Client Ready: " + mainClient.user.tag);
@@ -71,7 +72,8 @@ const validateMessage = (msg) => {
           const readyEvent = new Promise(r => channelClients[i].on("ready", r));
           await channelClients[i].login(channelTokens[i]);
           await readyEvent;
-          await channelClients[i].user.setActivity(PREFIX + "help", { type: "WATCHING" });
+          if (!DEVMODE)
+            await channelClients[i].user.setActivity(PREFIX + "help", { type: "WATCHING" });
           Audio.addChannel(channelClients[i]);
           console.log("Channel Client Ready: " + channelClients[i].user.tag);
         } catch(e) {
