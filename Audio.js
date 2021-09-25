@@ -500,7 +500,7 @@ Audio.prototype.playStreamInternal = async function() {
   });
   this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
   this.stream.on("finish", this.endFuc);
-  for (let i = 0; i < 35; ++i) {
+  for (let i = 0; i < 50; ++i) {
     if (this.stream.startTime !== undefined) return true;
     await new Promise(r => setTimeout(r, 100));
   }
