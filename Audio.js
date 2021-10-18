@@ -538,11 +538,11 @@ Audio.prototype.playURL = async function(url, immediate) {
   }
 };
 
-Audio.prototype.skip = async function() {
+Audio.prototype.skipLength = async function() {
   
 };
 
-Audio.prototype.skipInternal = async function(seconds) {
+Audio.prototype.skipLengthInternal = async function(seconds) {
   try {
 
     if (this.currentSong == null || this.stream === null) {
