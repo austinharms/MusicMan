@@ -204,8 +204,6 @@ Audio.prototype.join = async function (msg) {
 
 Audio.prototype.printCurrent = function() {
   try {
-    console.log(this.args);
-    console.log(this.getArgList());
     if (this.currentSong === null || this.stream === null) {
       this.server.sendEmbed("Playing:", "Nothing");
       return true;
@@ -538,7 +536,34 @@ Audio.prototype.playURL = async function(url, immediate) {
     this.server.sendError(bError);
     return false;
   }
-}
+};
+
+Audio.prototype.skip = async function() {
+  
+};
+
+Audio.prototype.skipInternal = async function(seconds) {
+  try {
+
+    if (this.currentSong == null || this.stream === null) {
+      const bError = BotError.createError("Failed to Skip, Nothing Playing", e, -1, this.server.id, "Audio:skipInternal", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    const time = new Date().getTime();
+    let currentPauseTime = 0;
+    if (this.stream.pausedSince !== null)
+      currentPauseTime = time - this.stream.pausedSince;
+    const played = Math.floor((((time - this.stream.startTime) - this.stream._pausedTime) - currentPauseTime)/1000);
+    this.queue.unshift({...this.currentSong, offset: played});
+    return await this.playInternal();
+  } catch(e) {
+    const bError = BotError.createError("Failed to Skip", e, -1, this.server.id, "Audio:skipInternal", false);
+    this.server.sendError(bError);
+    return false;
+  }
+};
 
 Audio.prototype.playInternal = async function() {
   try {
@@ -589,6 +614,7 @@ Audio.prototype.playStreamInternal = async function() {
   if (this.stream !== null) this.stream.destroy();
   this.stream = await ytdl(this.currentSong.url, {
     encoderArgs: this.getArgList(),
+    seek: this.currentSong.offset || 0,
     fmt: "mp3",
     quality: 'highestaudio',
     filter: "audioonly",

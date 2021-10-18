@@ -50,6 +50,8 @@ const validateMessage = (msg) => {
 
 (async() => {
   try {
+    if (DEVMODE) console.log("Bot in DEVELOPMENT mode");
+    console.log(`Listening for prefix: ${PREFIX}`);
     const readyEvent = new Promise(r => mainClient.on("ready", r));
     await mainClient.login(process.env.MAIN_TOKEN);
     await readyEvent;
