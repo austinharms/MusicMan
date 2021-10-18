@@ -108,6 +108,13 @@ const aReset = async function(params, msg) {
   }
 };
 
+const aSkipLength = async function(params, msg) {
+  if (this.getCommandUserInVC(msg)) {
+    const audio = this.getCommandAudioInstance(msg);
+    if (audio) await audio.skipLength(params);
+  }
+};
+
 const COMMANDS = Object.freeze([
   new Command(helpCommand, "Show This Page", "Displays the Help Guide for this Bot", "Help", "H", "He", "Hel", "What", "How"),
   new Command(aJoin, "Join your VC", "Makes the Bot Join Your Voice Chat", "Join", "J", "Jo", "Joi", "Connect", "Con", "Conn"),
@@ -117,6 +124,7 @@ const COMMANDS = Object.freeze([
   new Command(aCur, "Show the Current Song Details", "Shows Details about the Currently Playing Song", "NowPlaying", "NP", "NowP", "NPlay", "Current", "Cur", "WhatPlaying", "WhatP"),
   new Command(aQueue, "View the Song Queue", "Displays the Songs Queued to Play", "Queue", "Q", "Qu", "Que", "Queu", "List", "Li", "Lis"),
   new Command(aSkip, "Skip the Current Song", "Skip the Currently Playing Song", "Skip", "S", "Sk", "Ski", "FF", "FS", "Next", "N", "Ne", "Nex", "Forward", "For"),
+  new Command(aSkipLength, "Skip part of the Current Song", "Skip the set amount of seconds of the Currently Playing Song", "SkipLength", "SL", "SkipL", "FFL", "FastForward", "Fast", "FastF"),
   new Command(aRemove, "Remove Song in Queue", "Removes a Song From the Queue by Index", "Remove", "RM", "Rem", "Remo", "Remov", "Delete", "Del"),
   new Command(aClear, "Clears the Song Queue", "Removes all Songs From the Queue and Stops the Current Song", "Clear", "C", "Cl", "Cle", "Clea", "sudoRM-RF", "ALTF4", "Stop"),
   new Command(aDC, "Make the Bot Leave VC", "Make the Bot Leave VC if it is in one", "Leave", "Le", "Lea", "Leav", "Kill", "K", "DC", "Disconnect", "Dis", "D", "Exit", "Eit", "Ex", "Exi"),
