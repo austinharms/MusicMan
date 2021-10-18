@@ -213,7 +213,7 @@ Audio.prototype.printCurrent = function() {
     let currentPauseTime = 0;
     if (this.stream.pausedSince !== null)
       currentPauseTime = time - this.stream.pausedSince;
-    const played = Math.floor((((time - this.stream.startTime) - this.stream._pausedTime) - currentPauseTime)/1000);
+    const played = Math.floor((((time - this.stream.startTime) - this.stream._pausedTime) - currentPauseTime)/1000)  + (this.currentSong.offset || 0);
     const barFilled = Math.max(Math.min(Math.floor(played * 20 / this.currentSong.length), 20), 0);
     let progressBar = `[**${"=".repeat(barFilled)}${"-".repeat(20 - barFilled)}**]`;
     this.server.sendEmbed("Playing:", `**${this.currentSong.title}**\n${this.currentSong.url}\n*Duration: ${this.currentSong.length}s*
@@ -538,15 +538,40 @@ Audio.prototype.playURL = async function(url, immediate) {
   }
 };
 
-Audio.prototype.skipLength = async function() {
-  
+Audio.prototype.skipLength = async function(params) {
+  try {
+    if (this.currentSong == null || this.stream === null) {
+      const bError = BotError.createError("Failed to Skip, Nothing Playing", new Error("No Song Playing"), this.server.msg.id, this.server.id, "Audio:skipLength", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    if(!params || !params.trim()) {
+      const bError = BotError.createError("Failed to parse skip length", new Error("Failed to Parse Int"), this.server.msg.id, this.server.id, "Audio:skipLength", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    const length = parseInt(params.trim().split(' ')[0]);
+    if (isNaN(length)) {
+      const bError = BotError.createError("Failed to parse skip length", new Error("Failed to Parse Int"), this.server.msg.id, this.server.id, "Audio:skipLength", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    return this.skipLengthInternal(length);
+  } catch(e) {
+    const bError = BotError.createError("Failed to Skip", e, this.server.msg.id, this.server.id, "Audio:skipLength", false);
+    this.server.sendError(bError);
+    return false;
+  }
 };
 
 Audio.prototype.skipLengthInternal = async function(seconds) {
   try {
 
     if (this.currentSong == null || this.stream === null) {
-      const bError = BotError.createError("Failed to Skip, Nothing Playing", e, -1, this.server.id, "Audio:skipInternal", true);
+      const bError = BotError.createError("Failed to Skip, Nothing Playing", new Error("No Song Playing"), -1, this.server.id, "Audio:skipLengthInternal", true);
       this.server.sendError(bError);
       return false;
     }
@@ -555,11 +580,14 @@ Audio.prototype.skipLengthInternal = async function(seconds) {
     let currentPauseTime = 0;
     if (this.stream.pausedSince !== null)
       currentPauseTime = time - this.stream.pausedSince;
-    const played = Math.floor((((time - this.stream.startTime) - this.stream._pausedTime) - currentPauseTime)/1000);
-    this.queue.unshift({...this.currentSong, offset: played});
-    return await this.playInternal();
+    const played = Math.floor((((time - this.stream.startTime) - this.stream._pausedTime) - currentPauseTime)/1000) + (this.currentSong.offset || 0);
+    this.queue.unshift({...this.currentSong, offset: (played + seconds)});
+    console.log(this.queue);
+    const res = await this.playInternal();
+    console.log(this);
+    return res;
   } catch(e) {
-    const bError = BotError.createError("Failed to Skip", e, -1, this.server.id, "Audio:skipInternal", false);
+    const bError = BotError.createError("Failed to Skip", e, -1, this.server.id, "Audio:skipLengthInternal", false);
     this.server.sendError(bError);
     return false;
   }
@@ -581,7 +609,7 @@ Audio.prototype.playInternal = async function() {
 
     if (this.queue.length > 0) {
       this.currentSong = this.queue.shift();
-      for (let i = 0; i < 3; ++i) {
+      for (let i = 0; i < 2; ++i) {
         if (await this.playStreamInternal()) break;
       }
 
@@ -614,7 +642,7 @@ Audio.prototype.playStreamInternal = async function() {
   if (this.stream !== null) this.stream.destroy();
   this.stream = await ytdl(this.currentSong.url, {
     encoderArgs: this.getArgList(),
-    seek: this.currentSong.offset || 0,
+    seek: (this.currentSong.offset || 0),
     fmt: "mp3",
     quality: 'highestaudio',
     filter: "audioonly",
@@ -627,7 +655,7 @@ Audio.prototype.playStreamInternal = async function() {
   });
   this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
   this.stream.on("finish", this.endFuc);
-  for (let i = 0; i < 35; ++i) {
+  for (let i = 0; i < 50; ++i) {
     if (this.stream.startTime !== undefined) return true;
     await new Promise(r => setTimeout(r, 100));
   }
