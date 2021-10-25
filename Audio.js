@@ -30,14 +30,6 @@ Audio.prototype.defaultArgs = {
     min: -50,
     max: 50,
     name: "Baseboost"
-  },
-  echo: {
-    value: 0,
-    arg: "aecho=0.6:0.3:",
-    postArg: ":0.5",
-    min: 1,
-    max: 20000,
-    name: "Echo"
   }
 };
 Audio.prototype.channels = [];
@@ -60,7 +52,7 @@ Audio.prototype.bassBoost = function(params) {
   try {
     let val = 20;
     if (params && params.length > 0) {
-      const val = parseInt(params.trim());
+      val = parseInt(params.trim());
       if (isNaN(val)) {
         const bError = BotError.createError("Invalid BassBoost Value", e, this.server.msg.author.id, this.server.id, "Audio:bassBoost", true);
         this.server.sendError(bError);
@@ -445,11 +437,12 @@ Audio.prototype.play = async function(params, msg, immediate = false) {
         return true;
       }
     } else {
+      //Try to play non youtube URL (missing length and name)
       this.queue.push({ 
         url: url,
         rawURL: url,
-        title: "Song Name?",
-        length: 1000,
+        title: "Unknown",
+        length: 0,
         offset: 0,
        });
        if (await this.playInternal()) {
@@ -560,11 +553,11 @@ Audio.prototype.playURL = async function(url, immediate) {
 
     if (immediate) {
       this.queue.unshift(song);
-      if (!await this.playInternal()) return false;
+      if (!(await this.playInternal())) return false;
     } else {
       this.queue.push(song);
       if (this.currentSong === null) {
-        if (!await this.playInternal()) return false;
+        if (!(await this.playInternal())) return false;
       }
     }
 
@@ -662,7 +655,7 @@ Audio.prototype.playInternal = async function() {
     if (this.queue.length > 0) {
       this.currentSong = this.queue.shift();
       for (let i = 0; i < 2; ++i) {
-        if (await this.playStreamInternal()) break;
+        if ((await this.playStreamInternal())) break;
       }
 
       if (this.stream.startTime === undefined) { 
