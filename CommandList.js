@@ -130,8 +130,8 @@ const COMMANDS = Object.freeze([
   new Command(aDC, "Make the Bot Leave VC", "Make the Bot Leave VC if it is in one", "Leave", "Le", "Lea", "Leav", "Kill", "K", "DC", "Disconnect", "Dis", "D", "Exit", "Eit", "Ex", "Exi"),
   new Command(aLoop, "Loop the Current Song", "Loops the Current Song to Play Forever", "Loop", "L", "Lo", "Loo", "Again", "More", "Ag", "Mo", "Forever", "For"),
   new Command(aLoopQueue, "Loop the Current Song Queue", "Loops the Current Song Queue to Play Forever", "LoopQueue", "LQueue", "LQ", "QLoop", "QL", "QueueAgain", "QueueMore", "QA", "QM", "QueueForever", "QFor", "QForever", "QAgain", "QMore"),
-  new Command(aBB, "Add BassBoost effect", "Add BassBoost Effect range: -50 to 50, Only Applies after the current song is over", "BassBoost", "BB", "BBoost", "Bass", "Boost", "B", "Boo"),
-  new Command(aReset, "Remove all Audio Effects", "Clears all Audio Effects, Only Applies after the current song is over", "ClearEffects", "RemoveEffects", "CE", "Effects", "REffects", "CEffects", "RE", "CF"),
+  new Command(aBB, "Add BassBoost effect", "Add BassBoost Effect range: -50 to 50", "BassBoost", "BB", "BBoost", "Bass", "Boost", "B", "Boo"),
+  new Command(aReset, "Remove all Audio Effects", "Clears all Audio Effects, like bassboost", "ClearEffects", "RemoveEffects", "CE", "Effects", "REffects", "CEffects", "RE", "CF"),
 ]);
 
 const getCommand = Object.freeze((cmd) => {

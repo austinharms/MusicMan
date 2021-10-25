@@ -49,11 +49,17 @@ Audio.prototype.bassBoost = function(params) {
     }
 
     if (this.setArgInternal("bass", val)) {
-      this.server.thumbsUp();
-      if (this.stream !== null)
-        this.server.sendEmbed("BassBoost", "***Note*** this will **not** be applied to the current song");
+      if (this.stream !== null) {
+         if (this.skipLengthInternal(0)) {
+          this.server.thumbsUp();
+          return true;
+         }
+      } else {
+        this.server.thumbsUp();
+        return true;
+      }
 
-      return true;
+      return false;
     }
   } catch(e) {
     const bError = BotError.createError("Failed to BassBoost", e, this.server.msg.author.id, this.server.id, "Audio:bassBoost", false);
@@ -66,8 +72,16 @@ Audio.prototype.bassBoost = function(params) {
 Audio.prototype.resetArgs = function() {
   try {
     if (this.resetArgsInternal()) {
-      this.server.thumbsUp();
-      return true;
+      if (this.stream !== null) {
+        if (this.skipLengthInternal(0)) {
+         this.server.thumbsUp();
+         return true;
+        }
+      } else {
+        this.server.thumbsUp();
+        return true;
+      }
+      return false;
     }
   } catch(e) {
     const bError = BotError.createError("Failed to reset audio modifiers", e, this.server.msg.author.id, this.server.id, "Audio:resetArgs", false);
@@ -674,12 +688,12 @@ Audio.prototype.playStreamInternal = async function() {
     });
     this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
     this.stream.on("finish", this.endFuc);
-    for (let i = 0; i < 50; ++i) {
+    for (let i = 0; i < 60; ++i) {
       if (this.stream.startTime !== undefined) return true;
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise(r => setTimeout(r, 150));
     }
   } catch(e) {
-    BotError.createError("Failed to Play Stream", e, -1, this.server.id, "Audio:playStreamInternal", false);
+    BotError.createError("Failed to Play Song", e, -1, this.server.id, "Audio:playStreamInternal", false);
   }
 
   return false;
