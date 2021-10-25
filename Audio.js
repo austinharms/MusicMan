@@ -17,8 +17,21 @@ const Audio = function (parentServer, channelNo) {
   this.looped = false;
   this.queueLooped = false;
   this.client = this.channels[channelNo];
+  this.args = {};
+  for (const [key, value] of Object.entries(this.defaultArgs))
+    this.args[key] = {...value};
 };
 
+Audio.prototype.defaultArgs = {
+  bass: {
+    value: 0,
+    arg: "bass=g=",
+    postArg: "",
+    min: -50,
+    max: 50,
+    name: "Baseboost"
+  }
+};
 Audio.prototype.channels = [];
 
 Audio.prototype.timeoutDuration = 60000;
@@ -33,6 +46,110 @@ Audio.addChannel = function(c) {
 
 Audio.getChannelCount = function() {
   return Audio.prototype.channels.length;
+};
+
+Audio.prototype.bassBoost = function(params) {
+  try {
+    let val = 20;
+    if (params && params.length > 0) {
+      val = parseInt(params.trim());
+      if (isNaN(val)) {
+        const bError = BotError.createError("Invalid BassBoost Value", e, this.server.msg.author.id, this.server.id, "Audio:bassBoost", true);
+        this.server.sendError(bError);
+        return false;
+      }
+    }
+
+    if (this.setArgInternal("bass", val)) {
+        this.server.thumbsUp();
+        return true;
+    }
+  } catch(e) {
+    const bError = BotError.createError("Failed to BassBoost", e, this.server.msg.author.id, this.server.id, "Audio:bassBoost", false);
+    this.server.sendError(bError);
+  }
+
+  return false;
+};
+
+Audio.prototype.resetArgs = function() {
+  try {
+    if (this.resetArgsInternal()) {
+      if (this.stream !== null) {
+        if (this.skipLengthInternal(0)) {
+         this.server.thumbsUp();
+         return true;
+        }
+      } else {
+        this.server.thumbsUp();
+        return true;
+      }
+      return false;
+    }
+  } catch(e) {
+    const bError = BotError.createError("Failed to reset audio modifiers", e, this.server.msg.author.id, this.server.id, "Audio:resetArgs", false);
+    this.server.sendError(bError);
+  }
+
+  return false;
+};
+
+Audio.prototype.resetArgsInternal = function() {
+  try {
+    this.args = {};
+
+    for (const [key, value] of Object.entries(this.defaultArgs))
+      this.args[key] = {...value};
+
+    return true;
+  } catch(e) {
+    const bError = BotError.createError("Failed to reset args", e, -1, this.server.id, "Audio:resetArgsInternal", false);
+    this.server.sendError(bError);
+    return false;
+  }
+};
+
+Audio.prototype.getArgList = function() {
+  if (this.args === null && !this.resetArgsInternal()) return [];
+  const argList = ["-af"];
+  for (const key of Object.keys(this.args)) {
+    argList.push(`${this.args[key].arg + this.args[key].value + this.args[key].postArg}`);
+  }
+
+  return argList;
+};
+
+Audio.prototype.setArgInternal = function(name, value) {
+  try {
+    if (name in this.args) {
+      value = parseInt(value);
+      if (isNaN(value)) {
+        const bError = BotError.createError("Failed to set " + name + " arg", new Error("failed to parse value"), -1, this.server.id, "Audio:setArgInternal", true);
+        this.server.sendError(bError);
+        return false;
+      }
+
+      if (value > this.args[name].max)
+        value = this.args[name].max;
+      if (value < this.args[name].min)
+        value = this.args[name].min;
+      this.args[name].value = value;
+
+      if (this.stream !== null)
+        return this.skipLengthInternal(0);
+
+    } else {
+      const bError = BotError.createError("Failed to set " + name + " arg", new Error("arg dose not exist"), -1, this.server.id, "Audio:setArgInternal", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    return true;
+  } catch(e) {
+    const bError = BotError.createError("Failed to set " + name + " arg", e, -1, this.server.id, "Audio:setArgInternal", false);
+    this.server.sendError(bError);
+    return false;
+  }
 };
 
 Audio.prototype.getConnected = function() {
@@ -112,7 +229,7 @@ Audio.prototype.printCurrent = function() {
     let currentPauseTime = 0;
     if (this.stream.pausedSince !== null)
       currentPauseTime = time - this.stream.pausedSince;
-    const played = Math.floor((((time - this.stream.startTime) - this.stream._pausedTime) - currentPauseTime)/1000);
+    const played = Math.floor((((time - this.stream.startTime) - this.stream._pausedTime) - currentPauseTime)/1000)  + (this.currentSong.offset || 0);
     const barFilled = Math.max(Math.min(Math.floor(played * 20 / this.currentSong.length), 20), 0);
     let progressBar = `[**${"=".repeat(barFilled)}${"-".repeat(20 - barFilled)}**]`;
     this.server.sendEmbed("Playing:", `**${this.currentSong.title}**\n${this.currentSong.url}\n*Duration: ${this.currentSong.length}s*
@@ -314,11 +431,24 @@ Audio.prototype.play = async function(params, msg, immediate = false) {
         this.server.thumbsUp();
         return true;
       }
-    } else {
+    } else if (ytdl.validateURL(url)) {
       if (await this.playURL(url, immediate)) {
         this.server.thumbsUp();
         return true;
       }
+    } else {
+      //Try to play non youtube URL (missing length and name)
+      this.queue.push({ 
+        url: url,
+        rawURL: url,
+        title: "Unknown",
+        length: 0,
+        offset: 0,
+       });
+       if (await this.playInternal()) {
+        this.server.thumbsUp();
+        return true;
+       }
     }
   } else {
     if (await this.playSearch(url)) {
@@ -376,7 +506,7 @@ Audio.prototype.playPlaylist = async function(url) {
       url: s.shortUrl,
       title: s.title,
       length: s.durationSec,
-      encoderArgs: [],
+      offset: 0,
     }));
     this.queue.push(...songs);
     if (this.currentSong === null) {
@@ -418,16 +548,16 @@ Audio.prototype.playURL = async function(url, immediate) {
       url,
       title: rawSong.videoDetails.title,
       length: parseInt(rawSong.videoDetails.lengthSeconds),
-      encoderArgs: [],
+      offset: 0,
     };
 
     if (immediate) {
       this.queue.unshift(song);
-      if (!await this.playInternal()) return false;
+      if (!(await this.playInternal())) return false;
     } else {
       this.queue.push(song);
       if (this.currentSong === null) {
-        if (!await this.playInternal()) return false;
+        if (!(await this.playInternal())) return false;
       }
     }
 
@@ -437,7 +567,76 @@ Audio.prototype.playURL = async function(url, immediate) {
     this.server.sendError(bError);
     return false;
   }
-}
+};
+
+Audio.prototype.skipLength = async function(params) {
+  try {
+    if (this.currentSong == null || this.stream === null) {
+      const bError = BotError.createError("Failed to Skip, Nothing Playing", new Error("No Song Playing"), this.server.msg.id, this.server.id, "Audio:skipLength", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    if(!params || !params.trim()) {
+      const bError = BotError.createError("Failed to parse skip length", new Error("Failed to Parse Int"), this.server.msg.id, this.server.id, "Audio:skipLength", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    const length = parseInt(params.trim().split(' ')[0]);
+    if (isNaN(length)) {
+      const bError = BotError.createError("Failed to parse skip length", new Error("Failed to Parse Int"), this.server.msg.id, this.server.id, "Audio:skipLength", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    return this.skipLengthInternal(length);
+  } catch(e) {
+    const bError = BotError.createError("Failed to Skip", e, this.server.msg.id, this.server.id, "Audio:skipLength", false);
+    this.server.sendError(bError);
+    return false;
+  }
+};
+
+Audio.prototype.printArgs = function() {
+  try {
+    this.server.sendEmbed("Audio Modifiers", `${Object.values(this.args).reduce((text, arg) => `${text}\n**${arg.name}**:${arg.value}`, "")}`);
+    return true;
+  } catch(e) {
+    const bError = BotError.createError("Failed to Print Audio Modifiers", e, this.server.msg.id, this.server.id, "Audio:printArgs", false);
+    this.server.sendError(bError);
+    return false;
+  }
+};
+
+Audio.prototype.skipLengthInternal = async function(seconds) {
+  try {
+    if (this.currentSong == null || this.stream === null) {
+      const bError = BotError.createError("Failed to Skip, Nothing Playing", new Error("No Song Playing"), -1, this.server.id, "Audio:skipLengthInternal", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    const time = new Date().getTime();
+    let currentPauseTime = 0;
+    if (this.stream.pausedSince !== null)
+      currentPauseTime = time - this.stream.pausedSince;
+    const played = Math.floor((((time - this.stream.startTime) - this.stream._pausedTime) - currentPauseTime)/1000) + (this.currentSong.offset || 0);
+    if (played + seconds < 0) {
+      const bError = BotError.createError("Failed to Skip, Can Skip Before Song Start", new Error("Length Offset less than zero"), -1, this.server.id, "Audio:skipLengthInternal", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
+    this.queue.unshift({...this.currentSong, offset: (played + seconds)});
+    const res = await this.playInternal();
+    return res;
+  } catch(e) {
+    const bError = BotError.createError("Failed to Skip", e, -1, this.server.id, "Audio:skipLengthInternal", false);
+    this.server.sendError(bError);
+    return false;
+  }
+};
 
 Audio.prototype.playInternal = async function() {
   try {
@@ -455,8 +654,8 @@ Audio.prototype.playInternal = async function() {
 
     if (this.queue.length > 0) {
       this.currentSong = this.queue.shift();
-      for (let i = 0; i < 3; ++i) {
-        if (await this.playStreamInternal()) break;
+      for (let i = 0; i < 2; ++i) {
+        if ((await this.playStreamInternal())) break;
       }
 
       if (this.stream.startTime === undefined) { 
@@ -485,24 +684,35 @@ Audio.prototype.playInternal = async function() {
 };
 
 Audio.prototype.playStreamInternal = async function() {
-  if (this.stream !== null) this.stream.destroy();
-  this.stream = await ytdl(this.currentSong.url, {
-    encoderArgs: this.currentSong.encoderArgs,
-    fmt: "mp3",
-    quality: 'highestaudio',
-    filter: "audioonly",
-    requestOptions: {
-      headers: {
-        cookie: process.env.YT_COOKIE,
-        "x-youtube-identity-token": process.env.YT_ID,
+  try {
+    if (this.stream !== null) this.stream.destroy();
+    if (!this.currentSong.rawURL) {
+      const info = await ytdl.getInfo(this.currentSong.url);
+      const format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio' });
+      this.currentSong.rawURL = format.url;
+    }
+
+    this.stream = await ytdl.arbitraryStream(this.currentSong.rawURL, {
+      encoderArgs: this.getArgList(),
+      seek: this.currentSong.offset,
+      fmt: "mp3",
+      quality: 'highestaudio',
+      filter: "audioonly",
+      requestOptions: {
+        headers: {
+          cookie: process.env.YT_COOKIE,
+          "x-youtube-identity-token": process.env.YT_ID,
+        },
       },
-    },
-  });
-  this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
-  this.stream.on("finish", this.endFuc);
-  for (let i = 0; i < 50; ++i) {
-    if (this.stream.startTime !== undefined) return true;
-    await new Promise(r => setTimeout(r, 100));
+    });
+    this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
+    this.stream.on("finish", this.endFuc);
+    for (let i = 0; i < 60; ++i) {
+      if (this.stream.startTime !== undefined) return true;
+      await new Promise(r => setTimeout(r, 150));
+    }
+  } catch(e) {
+    BotError.createError("Failed to Play Song", e, -1, this.server.id, "Audio:playStreamInternal", false);
   }
 
   return false;
