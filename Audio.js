@@ -609,6 +609,12 @@ Audio.prototype.skipLengthInternal = async function(seconds) {
     if (this.stream.pausedSince !== null)
       currentPauseTime = time - this.stream.pausedSince;
     const played = Math.floor((((time - this.stream.startTime) - this.stream._pausedTime) - currentPauseTime)/1000) + (this.currentSong.offset || 0);
+    if (played + seconds < 0) {
+      const bError = BotError.createError("Failed to Skip, Can Skip Before Song Start", new Error("Length Offset less than zero"), -1, this.server.id, "Audio:skipLengthInternal", true);
+      this.server.sendError(bError);
+      return false;
+    }
+
     this.queue.unshift({...this.currentSong, offset: (played + seconds)});
     const res = await this.playInternal();
     return res;
