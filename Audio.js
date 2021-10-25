@@ -415,11 +415,23 @@ Audio.prototype.play = async function(params, msg, immediate = false) {
         this.server.thumbsUp();
         return true;
       }
-    } else {
+    } else if (ytdl.validateURL(url)) {
       if (await this.playURL(url, immediate)) {
         this.server.thumbsUp();
         return true;
       }
+    } else {
+      this.queue.push({ 
+        url: url,
+        rawURL: url,
+        title: "Song Name?",
+        length: 1000,
+        offset: 0,
+       });
+       if (await this.playInternal()) {
+        this.server.thumbsUp();
+        return true;
+       }
     }
   } else {
     if (await this.playSearch(url)) {
@@ -477,6 +489,7 @@ Audio.prototype.playPlaylist = async function(url) {
       url: s.shortUrl,
       title: s.title,
       length: s.durationSec,
+      offset: 0,
     }));
     this.queue.push(...songs);
     if (this.currentSong === null) {
@@ -518,6 +531,7 @@ Audio.prototype.playURL = async function(url, immediate) {
       url,
       title: rawSong.videoDetails.title,
       length: parseInt(rawSong.videoDetails.lengthSeconds),
+      offset: 0,
     };
 
     if (immediate) {
@@ -582,9 +596,7 @@ Audio.prototype.skipLengthInternal = async function(seconds) {
       currentPauseTime = time - this.stream.pausedSince;
     const played = Math.floor((((time - this.stream.startTime) - this.stream._pausedTime) - currentPauseTime)/1000) + (this.currentSong.offset || 0);
     this.queue.unshift({...this.currentSong, offset: (played + seconds)});
-    console.log(this.queue);
     const res = await this.playInternal();
-    console.log(this);
     return res;
   } catch(e) {
     const bError = BotError.createError("Failed to Skip", e, -1, this.server.id, "Audio:skipLengthInternal", false);
@@ -639,25 +651,35 @@ Audio.prototype.playInternal = async function() {
 };
 
 Audio.prototype.playStreamInternal = async function() {
-  if (this.stream !== null) this.stream.destroy();
-  this.stream = await ytdl(this.currentSong.url, {
-    encoderArgs: this.getArgList(),
-    seek: (this.currentSong.offset || 0),
-    fmt: "mp3",
-    quality: 'highestaudio',
-    filter: "audioonly",
-    requestOptions: {
-      headers: {
-        cookie: process.env.YT_COOKIE,
-        "x-youtube-identity-token": process.env.YT_ID,
+  try {
+    if (this.stream !== null) this.stream.destroy();
+    if (!this.currentSong.rawURL) {
+      const info = await ytdl.getInfo(this.currentSong.url);
+      const format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio' });
+      this.currentSong.rawURL = format.url;
+    }
+
+    this.stream = await ytdl.arbitraryStream(this.currentSong.rawURL, {
+      encoderArgs: this.getArgList(),
+      seek: this.currentSong.offset,
+      fmt: "mp3",
+      quality: 'highestaudio',
+      filter: "audioonly",
+      requestOptions: {
+        headers: {
+          cookie: process.env.YT_COOKIE,
+          "x-youtube-identity-token": process.env.YT_ID,
+        },
       },
-    },
-  });
-  this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
-  this.stream.on("finish", this.endFuc);
-  for (let i = 0; i < 50; ++i) {
-    if (this.stream.startTime !== undefined) return true;
-    await new Promise(r => setTimeout(r, 100));
+    });
+    this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
+    this.stream.on("finish", this.endFuc);
+    for (let i = 0; i < 50; ++i) {
+      if (this.stream.startTime !== undefined) return true;
+      await new Promise(r => setTimeout(r, 100));
+    }
+  } catch(e) {
+    BotError.createError("Failed to Play Stream", e, -1, this.server.id, "Audio:playStreamInternal", false);
   }
 
   return false;
