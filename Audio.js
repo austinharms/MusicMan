@@ -26,9 +26,18 @@ Audio.prototype.defaultArgs = {
   bass: {
     value: 0,
     arg: "bass=g=",
+    postArg: "",
     min: -50,
     max: 50,
     name: "Baseboost"
+  },
+  echo: {
+    value: 0,
+    arg: "aecho=0.6:0.3:",
+    postArg: ":0.5",
+    min: 1,
+    max: 20000,
+    name: "Echo"
   }
 };
 Audio.prototype.channels = [];
@@ -112,7 +121,7 @@ Audio.prototype.getArgList = function() {
   if (this.args === null && !this.resetArgsInternal()) return [];
   const argList = ["-af"];
   for (const key of Object.keys(this.args)) {
-    argList.push(`${this.args[key].arg + this.args[key].value}`);
+    argList.push(`${this.args[key].arg + this.args[key].value + this.args[key].postArg}`);
   }
 
   return argList;
