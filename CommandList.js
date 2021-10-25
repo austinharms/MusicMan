@@ -108,6 +108,13 @@ const aReset = async function(params, msg) {
   }
 };
 
+const aModPrint = async function(params, msg) {
+  if (this.getCommandUserInVC(msg)) {
+    const audio = this.getCommandAudioInstance(msg);
+    if (audio) await audio.printArgs();
+  }
+};
+
 const aSkipLength = async function(params, msg) {
   if (this.getCommandUserInVC(msg)) {
     const audio = this.getCommandAudioInstance(msg);
@@ -132,6 +139,7 @@ const COMMANDS = Object.freeze([
   new Command(aLoopQueue, "Loop the Current Song Queue", "Loops the Current Song Queue to Play Forever", "LoopQueue", "LQueue", "LQ", "QLoop", "QL", "QueueAgain", "QueueMore", "QA", "QM", "QueueForever", "QFor", "QForever", "QAgain", "QMore"),
   new Command(aBB, "Add BassBoost effect", "Add BassBoost Effect range: -50 to 50", "BassBoost", "BB", "BBoost", "Bass", "Boost", "B", "Boo"),
   new Command(aReset, "Remove all Audio Effects", "Clears all Audio Effects, like bassboost", "ClearEffects", "RemoveEffects", "CE", "Effects", "REffects", "CEffects", "RE", "CF"),
+  new Command(aModPrint, "Show all Audio Effects", "Shows all Audio Effects, like bassboost", "Effects", "Mod", "Mods", "PEffects", "PrintEffects", "Print", "ShowEffects", "ShowE", "SE"),
 ]);
 
 const getCommand = Object.freeze((cmd) => {

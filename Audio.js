@@ -17,9 +17,20 @@ const Audio = function (parentServer, channelNo) {
   this.looped = false;
   this.queueLooped = false;
   this.client = this.channels[channelNo];
-  this.args = null;
+  this.args = {};
+  for (const [key, value] of Object.entries(this.defaultArgs))
+    this.args[key] = {...value};
 };
 
+Audio.prototype.defaultArgs = {
+  bass: {
+    value: 0,
+    arg: "bass=g=",
+    min: -50,
+    max: 50,
+    name: "Baseboost"
+  }
+};
 Audio.prototype.channels = [];
 
 Audio.prototype.timeoutDuration = 60000;
@@ -49,17 +60,8 @@ Audio.prototype.bassBoost = function(params) {
     }
 
     if (this.setArgInternal("bass", val)) {
-      if (this.stream !== null) {
-         if (this.skipLengthInternal(0)) {
-          this.server.thumbsUp();
-          return true;
-         }
-      } else {
         this.server.thumbsUp();
         return true;
-      }
-
-      return false;
     }
   } catch(e) {
     const bError = BotError.createError("Failed to BassBoost", e, this.server.msg.author.id, this.server.id, "Audio:bassBoost", false);
@@ -93,14 +95,10 @@ Audio.prototype.resetArgs = function() {
 
 Audio.prototype.resetArgsInternal = function() {
   try {
-    this.args = {
-      bass: {
-        value: 0,
-        arg: "bass=g=",
-        min: -50,
-        max: 50
-      }
-    };
+    this.args = {};
+
+    for (const [key, value] of Object.entries(this.defaultArgs))
+      this.args[key] = {...value};
 
     return true;
   } catch(e) {
@@ -122,7 +120,6 @@ Audio.prototype.getArgList = function() {
 
 Audio.prototype.setArgInternal = function(name, value) {
   try {
-    if (this.args === null && !this.resetArgsInternal()) return false;
     if (name in this.args) {
       value = parseInt(value);
       if (isNaN(value)) {
@@ -136,6 +133,10 @@ Audio.prototype.setArgInternal = function(name, value) {
       if (value < this.args[name].min)
         value = this.args[name].min;
       this.args[name].value = value;
+
+      if (this.stream !== null)
+        return this.skipLengthInternal(0);
+
     } else {
       const bError = BotError.createError("Failed to set " + name + " arg", new Error("arg dose not exist"), -1, this.server.id, "Audio:setArgInternal", true);
       this.server.sendError(bError);
@@ -595,9 +596,19 @@ Audio.prototype.skipLength = async function(params) {
   }
 };
 
+Audio.prototype.printArgs = function() {
+  try {
+    this.server.sendEmbed("Audio Modifiers", `${Object.values(this.args).reduce((text, arg) => `${text}\n**${arg.name}**:${arg.value}`, "")}`);
+    return true;
+  } catch(e) {
+    const bError = BotError.createError("Failed to Print Audio Modifiers", e, this.server.msg.id, this.server.id, "Audio:printArgs", false);
+    this.server.sendError(bError);
+    return false;
+  }
+};
+
 Audio.prototype.skipLengthInternal = async function(seconds) {
   try {
-
     if (this.currentSong == null || this.stream === null) {
       const bError = BotError.createError("Failed to Skip, Nothing Playing", new Error("No Song Playing"), -1, this.server.id, "Audio:skipLengthInternal", true);
       this.server.sendError(bError);
