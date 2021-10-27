@@ -444,6 +444,7 @@ Audio.prototype.play = async function(params, msg, immediate = false) {
         title: "Unknown",
         length: 0,
         offset: 0,
+        arbitrary: true,
        });
        if (await this.playInternal()) {
         this.server.thumbsUp();
@@ -507,6 +508,7 @@ Audio.prototype.playPlaylist = async function(url) {
       title: s.title,
       length: s.durationSec,
       offset: 0,
+      arbitrary: false,
     }));
     this.queue.push(...songs);
     if (this.currentSong === null) {
@@ -549,6 +551,7 @@ Audio.prototype.playURL = async function(url, immediate) {
       title: rawSong.videoDetails.title,
       length: parseInt(rawSong.videoDetails.lengthSeconds),
       offset: 0,
+      arbitrary: false,
     };
 
     if (immediate) {
@@ -654,8 +657,14 @@ Audio.prototype.playInternal = async function() {
 
     if (this.queue.length > 0) {
       this.currentSong = this.queue.shift();
-      for (let i = 0; i < 2; ++i) {
-        if ((await this.playStreamInternal())) break;
+      if (this.currentSong.arbitrary) {
+        for (let i = 0; i < 2; ++i) {
+          if ((await this.playStreamInternal())) break;
+        }
+      } else {
+        if (!(await this.playStreamInternal())) {
+          await this.playYTStreamInternal();
+        }
       }
 
       if (this.stream.startTime === undefined) { 
@@ -707,12 +716,41 @@ Audio.prototype.playStreamInternal = async function() {
     });
     this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
     this.stream.on("finish", this.endFuc);
-    for (let i = 0; i < 60; ++i) {
+    for (let i = 0; i < 50; ++i) {
       if (this.stream.startTime !== undefined) return true;
-      await new Promise(r => setTimeout(r, 150));
+      await new Promise(r => setTimeout(r, 100));
     }
   } catch(e) {
     BotError.createError("Failed to Play Song", e, -1, this.server.id, "Audio:playStreamInternal", false);
+  }
+
+  return false;
+};
+
+Audio.prototype.playYTStreamInternal = async function() {
+  try {
+    if (this.stream !== null) this.stream.destroy();
+    this.stream = await ytdl(this.currentSong.url, {
+      encoderArgs: this.getArgList(),
+      seek: this.currentSong.offset,
+      fmt: "mp3",
+      quality: 'highestaudio',
+      filter: "audioonly",
+      requestOptions: {
+        headers: {
+          cookie: process.env.YT_COOKIE,
+          "x-youtube-identity-token": process.env.YT_ID,
+        },
+      },
+    });
+    this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
+    this.stream.on("finish", this.endFuc);
+    for (let i = 0; i < 50; ++i) {
+      if (this.stream.startTime !== undefined) return true;
+      await new Promise(r => setTimeout(r, 100));
+    }
+  } catch(e) {
+    BotError.createError("Failed to Play Song", e, -1, this.server.id, "Audio:playYTStreamInternal", false);
   }
 
   return false;
