@@ -2,6 +2,7 @@ const ytdl = require("discord-ytdl-core");
 const ytpl = require("ytpl");
 const ytsr = require('ytsr');
 const BotError = require("./Error");
+const AudioTest = require("./Test");
 
 const Audio = function (parentServer, channelNo) {
   this.server = parentServer;
@@ -657,18 +658,9 @@ Audio.prototype.playInternal = async function() {
 
     if (this.queue.length > 0) {
       this.currentSong = this.queue.shift();
-      //Create Custom Encoder
-      const dlChunkSize = 1024 * 1024 * 10;
-      const requestOptions = {
-        maxReconnects: 6,
-        maxRetries: 3,
-        backoff: { inc: 500, max: 10000 },
-        headers: {
-          cookie: process.env.YT_COOKIE,
-          "x-youtube-identity-token": process.env.YT_ID,
-        },
-      }
-
+      this.stream = await AudioTest(this.currentSong.url);
+      this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
+      this.stream.on("finish", this.endFuc);
       // if (this.currentSong.arbitrary) {
       //   for (let i = 0; i < 2; ++i) {
       //     if ((await this.playStreamInternal())) break;

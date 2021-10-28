@@ -3,7 +3,7 @@ const PassThrough = require("stream").PassThrough;
 const miniget = require("miniget");
 
 //This SHOULD be able to play a url (untested)
-const downloadFromInfoCallback = () => {
+const playURL = async (url) => {
   //Create The Stream, Should be done after a format is found, TODO fix that
   const stream = new PassThrough({
     highWaterMark: 1024 * 512,
@@ -12,21 +12,21 @@ const downloadFromInfoCallback = () => {
     stream.destroyed = true;
   };
 
-  const info = await ytdl.getInfo(this.currentSong.url);
+  const info = await ytdl.getInfo(url);
   const format = ytdl.chooseFormat(info.formats, { quality: "highestaudio" });
-  const options = {
-    encoderArgs: this.getArgList(),
-    seek: this.currentSong.offset,
-    //fmt: "mp3", Not Needed, I think
-    //quality: "highestaudio",
-    //filter: "audioonly", Is it nedded? What used it?
-    // requestOptions: {
-    //   headers: {
-    //     cookie: process.env.YT_COOKIE,
-    //     "x-youtube-identity-token": process.env.YT_ID,
-    //   },
-    // },
-  };
+  // const options = {
+  //   encoderArgs: this.getArgList(),
+  //   seek: this.currentSong.offset,
+  //   //fmt: "mp3", Not Needed, I think
+  //   //quality: "highestaudio",
+  //   //filter: "audioonly", Is it nedded? What used it?
+  //   // requestOptions: {
+  //   //   headers: {
+  //   //     cookie: process.env.YT_COOKIE,
+  //   //     "x-youtube-identity-token": process.env.YT_ID,
+  //   //   },
+  //   // },
+  // };
 
   let req;
   let shouldEnd = true;
@@ -120,4 +120,8 @@ const downloadFromInfoCallback = () => {
     req.destroy();
     req.end();
   };
+
+  return stream;
 };
+
+module.exports = playURL;
