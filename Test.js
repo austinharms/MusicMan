@@ -1,57 +1,55 @@
 const ytdl = require("discord-ytdl-core");
-const PassThrough = require("stream").PassThrough;
 const miniget = require("miniget");
+const FFmpeg = require("prism-media").FFmpeg;
 
-//This SHOULD be able to play a url (untested)
+//This SHOULD be able to play a url
 const playURL = async (url) => {
-  //Create The Stream, Should be done after a format is found, TODO fix that
-  const stream = new PassThrough({
-    highWaterMark: 1024 * 512,
-  });
-  stream._destroy = () => {
-    stream.destroyed = true;
-  };
-
-  const info = await ytdl.getInfo(url);
-  const format = ytdl.chooseFormat(info.formats, { quality: "highestaudio" });
-  // const options = {
-  //   encoderArgs: this.getArgList(),
-  //   seek: this.currentSong.offset,
-  //   //fmt: "mp3", Not Needed, I think
-  //   //quality: "highestaudio",
-  //   //filter: "audioonly", Is it nedded? What used it?
-  //   // requestOptions: {
-  //   //   headers: {
-  //   //     cookie: process.env.YT_COOKIE,
-  //   //     "x-youtube-identity-token": process.env.YT_ID,
-  //   //   },
-  //   // },
-  // };
-
   let req;
   let shouldEnd = true;
-  let contentLength,
-    downloaded = 0;
+  let contentLength, downloaded = 0;
+  let output;
 
   const dlChunkSize = 1024 * 1024 * 10;
-  const shouldBeChunked = !format.hasAudio || !format.hasVideo;
-
-  const ondata = (chunk) => {
-    downloaded += chunk.length;
-    stream.emit("progress", chunk.length, downloaded, contentLength);
-  };
-
   const requestOptions = {
     maxReconnects: 6,
     maxRetries: 3,
     backoff: { inc: 500, max: 10000 },
+    highWaterMark: 1024 * 512,
     headers: {
       cookie: process.env.YT_COOKIE,
       "x-youtube-identity-token": process.env.YT_ID,
     },
   };
+  const FFmpegArgs = [
+    '-ss',
+    '0', //Skip Duration
+    '-analyzeduration',
+    '0',
+    '-loglevel',
+    '0',
+    '-f',
+    'mp3', //This is the format
+    '-ar',
+    '48000',
+    '-ac',
+    '2',
 
-  if (shouldBeChunked) {
+  ];
+  const transcoder = new FFmpeg({
+    args: FFmpegArgs,
+  });
+
+  const ondata = (chunk) => {
+    downloaded += chunk.length;
+    output.emit("progress", chunk.length, downloaded, contentLength);
+  };
+
+  const info = await ytdl.getInfo(url);
+  const format = ytdl.chooseFormat(info.formats, { quality: "highestaudio", filter: 'audioonly' });
+  console.log(format);
+  const shouldBeChunked = !format.hasAudio || !format.hasVideo;
+
+ if (shouldBeChunked) {
     let start = 0;
     let end = dlChunkSize;
     const rangeEnd = undefined;
@@ -66,7 +64,7 @@ const playURL = async (url) => {
       req = miniget(format.url, requestOptions);
       req.on("data", ondata);
       req.on("end", () => {
-        if (stream.destroyed) {
+        if (output.destroyed) {
           return;
         }
         if (end && end !== rangeEnd) {
@@ -76,7 +74,7 @@ const playURL = async (url) => {
         }
       });
 
-      //Forward events from the request to the stream.
+      output = req.pipe(transcoder, { end: shouldEnd });
       [
         "abort",
         "request",
@@ -85,22 +83,20 @@ const playURL = async (url) => {
         "redirect",
         "retry",
         "reconnect",
-      ].forEach((event) => {
-        req.prependListener(event, stream.emit.bind(stream, event));
-      });
-      req.pipe(stream, { shouldEnd });
+      ].forEach((event) => req.prependListener(event, output.emit.bind(transcoder, event)));
     };
     getNextChunk();
   } else {
     req = miniget(format.url, requestOptions);
     req.on("response", (res) => {
-      if (stream.destroyed) {
+      if (output.destroyed) {
         return;
       }
       contentLength = contentLength || parseInt(res.headers["content-length"]);
     });
     req.on("data", ondata);
-    //Forward events from the request to the stream.
+
+    output = req.pipe(transcoder, { end: shouldEnd });
     [
       "abort",
       "request",
@@ -109,19 +105,10 @@ const playURL = async (url) => {
       "redirect",
       "retry",
       "reconnect",
-    ].forEach((event) => {
-      req.prependListener(event, stream.emit.bind(stream, event));
-    });
-    req.pipe(stream, { shouldEnd });
+    ].forEach((event) => req.prependListener(event, output.emit.bind(transcoder, event)));
   }
 
-  stream._destroy = () => {
-    stream.destroyed = true;
-    req.destroy();
-    req.end();
-  };
-
-  return stream;
+  return output;
 };
 
 module.exports = playURL;

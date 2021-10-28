@@ -659,8 +659,8 @@ Audio.prototype.playInternal = async function() {
     if (this.queue.length > 0) {
       this.currentSong = this.queue.shift();
       this.stream = await AudioTest(this.currentSong.url);
-      this.stream.resume();
-      console.log(this.stream);
+      //this.stream.resume();
+      //console.log(this.stream);
       this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
       this.stream.on("finish", this.endFuc);
       // if (this.currentSong.arbitrary) {
@@ -785,6 +785,7 @@ Audio.prototype.playInternal = async function() {
 // };
 
 Audio.prototype.songEnd = async function() {
+  console.log("Song END");
   try {
     if (this.looped) { 
       this.queue.unshift(this.currentSong); 
