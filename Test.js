@@ -1,6 +1,7 @@
 const ytdl = require("discord-ytdl-core");
 const miniget = require("miniget");
 const FFmpeg = require("prism-media").FFmpeg;
+const m3u8stream = require('m3u8stream');
 
 //This SHOULD be able to play a url
 const playURL = async (url) => {
@@ -20,21 +21,20 @@ const playURL = async (url) => {
       "x-youtube-identity-token": process.env.YT_ID,
     },
   };
+
   const FFmpegArgs = [
-    '-ss',
-    '0', //Skip Duration
     '-analyzeduration',
     '0',
     '-loglevel',
     '0',
     '-f',
-    'mp3', //This is the format
+    'mp3',
     '-ar',
     '48000',
     '-ac',
     '2',
-
   ];
+
   const transcoder = new FFmpeg({
     args: FFmpegArgs,
   });

@@ -1,4 +1,6 @@
-const ytdl = require("discord-ytdl-core");
+const ytdl = require("ytdl-core");
+const miniget = require("miniget");
+const FFmpeg = require("prism-media").FFmpeg;
 const ytpl = require("ytpl");
 const ytsr = require('ytsr');
 const BotError = require("./Error");
@@ -22,6 +24,32 @@ const Audio = function (parentServer, channelNo) {
   for (const [key, value] of Object.entries(this.defaultArgs))
     this.args[key] = {...value};
 };
+
+Audio.prototype.chunkSize = 1024 * 1024 * 10;
+
+Audio.prototype.requestOptions = {
+  maxReconnects: 6,
+  maxRetries: 3,
+  backoff: { inc: 500, max: 10000 },
+  highWaterMark: 1024 * 512,
+  headers: {
+    cookie: process.env.YT_COOKIE,
+    "x-youtube-identity-token": process.env.YT_ID,
+  },
+};
+
+Audio.prototype.ffmpegArgs = [
+  '-analyzeduration',
+  '0',
+  '-loglevel',
+  '0',
+  '-f',
+  'mp3',
+  '-ar',
+  '48000',
+  '-ac',
+  '2',
+];
 
 Audio.prototype.defaultArgs = {
   bass: {
@@ -658,34 +686,65 @@ Audio.prototype.playInternal = async function() {
 
     if (this.queue.length > 0) {
       this.currentSong = this.queue.shift();
-      this.stream = await AudioTest(this.currentSong.url);
-      //this.stream.resume();
-      //console.log(this.stream);
-      this.stream = this.voiceConnection.play(this.stream, { volume: 0.5 });
+
+      let url = this.currentSong.url;
+      if (!this.currentSong.arbitrary) {
+        if (!this.currentSong.rawURL) {
+          const info = await ytdl.getInfo(url);
+          const format = ytdl.chooseFormat(info.formats, { quality: "highestaudio", filter: 'audioonly' });
+          this.currentSong.rawURL = format.url;
+        }
+
+        url = this.currentSong.rawURL;
+      }
+
+      let req;
+      let shouldEnd = true;
+      let contentLength;
+      let downloaded = 0;
+      let start = 0;
+      let end = this.chunkSize;
+      const transcoder = new FFmpeg({ args: this.ffmpegArgs });
+      const getChunk = () => {
+        if (end >= contentLength) end = 0;
+        shouldEnd = !end;
+        this.requestOptions.headers.Range = `bytes=${start}-${end || ""}`;
+        req = miniget(url, this.requestOptions);
+        req.on("data", (chunk) => {
+          downloaded += chunk.length;
+          transcoder.emit("progress", chunk.length, downloaded, contentLength);
+        });
+        req.on("end", () => {
+          if (transcoder.destroyed)
+            return;
+
+          if (end && end !== rangeEnd) {
+            start = end + 1;
+            end += dlChunkSize;
+            getChunk();
+          }
+        });
+
+        req.pipe(transcoder, {end: shouldEnd});
+        req.prependListener("error", transcoder.emit.bind(transcoder, "error"));
+        req.prependListener("response", transcoder.emit.bind(transcoder, "response"));
+      };
+      getChunk();
+      try {
+        await new Promise((a,r) => {
+          transcoder.on("response", a);
+          transcoder.on("error", r);
+          setTimeout(25000, r);
+        });
+      } catch {
+        this.timeout = setTimeout(this.dcFuc, this.timeoutDuration);
+        transcoder.destroy();
+        this.stream = null;
+        return false;
+      }
+
+      this.stream = this.voiceConnection.play(transcoder, { volume: 0.5 });
       this.stream.on("finish", this.endFuc);
-      // if (this.currentSong.arbitrary) {
-      //   for (let i = 0; i < 2; ++i) {
-      //     if ((await this.playStreamInternal())) break;
-      //   }
-      // } else {
-      //   if (!(await this.playStreamInternal())) {
-      //     await this.playYTStreamInternal();
-      //   }
-      // }
-
-      // if (this.stream.startTime === undefined) { 
-      //   if (this.stream !== null) { 
-      //     this.stream.destroy(); 
-      //     this.stream = null;
-      //   }
-    
-      //   if (this.timeout !== null) { 
-      //     clearTimeout(this.timeout);
-      //     this.timeout = setTimeout(this.dcFuc, this.timeoutDuration);
-      //   }
-
-      //   throw new Error("Audio Stream Not Started");
-      // }
     } else {
       this.timeout = setTimeout(this.dcFuc, this.timeoutDuration);
     }
