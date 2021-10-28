@@ -688,7 +688,7 @@ Audio.prototype.playStreamInternal = async function() {
     if (this.stream !== null) this.stream.destroy();
     if (!this.currentSong.rawURL) {
       const info = await ytdl.getInfo(this.currentSong.url);
-      const format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio' });
+      const format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio', filter: "audioonly" });
       this.currentSong.rawURL = format.url;
     }
 
