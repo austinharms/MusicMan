@@ -1,4 +1,4 @@
-const SendEmbed = async (channel, title, content, image = null) => {
+const SendEmbed = async (channel, title, description, image = null) => {
   const embed = {
     embed: {
       title,
