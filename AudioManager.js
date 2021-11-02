@@ -6,7 +6,7 @@ const getConnection = async (guildId, channelId, clientIndex = -1) => {
     let clientNo = clientIndex;
     if (clientIndex === -1) {
       clientNo = 0;
-      while(connections[guildId][clientNo] && connections[guildId][clientNo].GetChannelID() != channelId) ++clientNo;
+      while(connections[guildId][clientNo] && connections[guildId][clientNo].GetChannelID() != channelId) ++clientNo; 
     }
 
     if (connections[guildId][clientNo]) {
@@ -17,7 +17,7 @@ const getConnection = async (guildId, channelId, clientIndex = -1) => {
       }
     } else {
       const connection = new AudioConnection(removeConnection.bind(this, guildId, clientNo));
-      connection.Init(foundClientIndex, guildId, channelId);
+      connection.Init(clientNo, guildId, channelId);
       connections[guildId][clientNo] = connection;
       return connection;
     }
@@ -32,6 +32,7 @@ const getConnection = async (guildId, channelId, clientIndex = -1) => {
 
 const removeConnection = async (guildId, clientIndex) => {
   connections[guildId][clientIndex] = null;
+  console.log(`Client: ${clientIndex}, disconnected from guild: ${guildId}`);
 };
 
 exports.removeConnection = removeConnection;

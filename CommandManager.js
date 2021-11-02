@@ -11,7 +11,6 @@ const ServerlessCommands = {
 const isCharNumber = (c) => c >= '0' && c <= '9';
 
 const parseCommand = (msg) => {
-  console.log(msg);
   const command = {
     text: msg.content,
     user: msg.author,
@@ -58,7 +57,6 @@ const onCommand = msg => {
   } else if (parsedCommand.command === "join") {
     AudioManager.getConnection(parsedCommand.guild.id, parsedCommand.guildUser.voice.channel.id, parsedCommand.channelIndex);
   }
-  console.log(parsedCommand);
 };
 
 const CommandManager = {

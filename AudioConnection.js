@@ -17,7 +17,7 @@ AudioConnection.prototype.Init = async function(clientIndex, guildId, channelId)
   this.client = ClientManager.GetClient(clientIndex);
   if (this.client === null) throw new Error("Client Index Out of Range");
   this.guild = await this.client.guilds.fetch(guildId);
-  this.channel = this.guild.channels.resolve(channel.id);
+  this.channel = this.guild.channels.resolve(channelId);
   if (this.channel === null) throw new Error("Failed to get Channel from Guild");
   if (!this.channel.joinable) throw new Error("Channel Not Joinable");
   this.voiceConnection = await this.channel.join();
@@ -25,7 +25,7 @@ AudioConnection.prototype.Init = async function(clientIndex, guildId, channelId)
   this.initialized = true;
 };
 
-AudioConnection.prototype.GetChannelID = async function() {
+AudioConnection.prototype.GetChannelID = function() {
   if (!this.initialized) return -1;
   return this.voiceConnection.channel.id;
 };
