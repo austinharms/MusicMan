@@ -41,6 +41,11 @@ ClientManager.prototype.GetMainClient = function() {
   return this.clients[0];
 }
 
+ClientManager.prototype.GetClient = function(index) {
+  if (!this.createdClients || this.clientCount < index || index < 0) return null;
+  return this.clients[index];
+};
+
 const clientManager = new ClientManager(process.env.CLIENT_TOKENS.split(","));
 
 module.exports = clientManager;
