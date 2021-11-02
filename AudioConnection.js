@@ -35,4 +35,12 @@ AudioConnection.prototype.IsUserInChannel = async function(userId) {
   return this.voiceConnection.channel.members.has(userId);
 };
 
-exports.default = AudioConnection;
+AudioConnection.prototype.Disconnect = function() {
+  if (this.initialized) {
+    this.voiceConnection.disconnect();
+  } else {
+    this.onLevae();
+  }
+}
+
+module.exports = AudioConnection;

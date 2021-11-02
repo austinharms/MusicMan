@@ -1,4 +1,5 @@
 const { SendEmbed } = require("./MessageUtilities");
+const AudioManager = require("./AudioManager");
 let prefix = "~";
 
 const ServerlessCommands = {
@@ -10,11 +11,14 @@ const ServerlessCommands = {
 const isCharNumber = (c) => c >= '0' && c <= '9';
 
 const parseCommand = (msg) => {
+  console.log(msg);
   const command = {
     text: msg.content,
     user: msg.author,
+    guildUser: msg.member,
     channel: msg.channel,
     guild: msg.guild,
+    msg,
   };
 
   const parts = command.text.split(" ").filter(part => part.length > 0);
@@ -51,8 +55,9 @@ const onCommand = msg => {
   const parsedCommand = parseCommand(msg);
   if (ServerlessCommands.hasOwnProperty(parsedCommand.command)) {
     ServerlessCommands[parsedCommand.command](parsedCommand);
+  } else if (parsedCommand.command === "join") {
+    AudioManager.getConnection(parsedCommand.guild.id, parsedCommand.guildUser.voice.channel.id, parsedCommand.channelIndex);
   }
-
   console.log(parsedCommand);
 };
 

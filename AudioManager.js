@@ -17,14 +17,14 @@ const getConnection = async (guildId, channelId, clientIndex = -1) => {
       }
     } else {
       const connection = new AudioConnection(removeConnection.bind(this, guildId, clientNo));
-      connections.Init(foundClientIndex, guildId, channelId);
+      connection.Init(foundClientIndex, guildId, channelId);
       connections[guildId][clientNo] = connection;
       return connection;
     }
   } else {
     const foundClientIndex =  clientIndex === -1?0:clientIndex;
     const connection = new AudioConnection(removeConnection.bind(this, guildId, foundClientIndex));
-    connections.Init(foundClientIndex, guildId, channelId);
+    connection.Init(foundClientIndex, guildId, channelId);
     connections[guildId] = { [foundClientIndex]: connection };
     return connection;
   }
