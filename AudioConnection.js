@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const ClientManager = require("./ClientManager");
 
-const AudioConnection = function(clientIndex, guildId, channelId) {
+const AudioConnection = function() {
   this.initialized = false;
   this.guild = null;
   this.channel = null;
@@ -12,7 +12,7 @@ const AudioConnection = function(clientIndex, guildId, channelId) {
   this.voiceConnection = null;
 };
 
-AudioConnection.prototype.Init = async function() {
+AudioConnection.prototype.Init = async function(clientIndex, guildId, channelId) {
   this.client = ClientManager.GetClient(clientIndex);
   if (this.client === null) throw new Error("Client Index Out of Range");
   this.guild = await this.client.guilds.fetch(guildId);
