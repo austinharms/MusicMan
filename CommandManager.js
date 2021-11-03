@@ -1,4 +1,5 @@
 const BotError = require("./BotError");
+const URLUtilities = require("./URLUtilities");
 const { SendEmbed, SendError, ReactThumbsUp } = require("./MessageUtilities");
 const AudioManager = require("./AudioManager");
 let prefix = "~";
@@ -22,6 +23,13 @@ const AudioCommands = {
       await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: true,
+  },
+  "play": {
+    func: async function(command, connection) {
+      await URLUtilities.ResolveSong(command.text);
+      await ReactThumbsUp(command.msg);
+    },
+    requiresExistingConnection: false,
   },
 };
 

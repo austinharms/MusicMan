@@ -1,5 +1,5 @@
 const BotError = require("./BotError");
-const ytdl = require("ytdl");
+const ytdl = require("ytdl-core");
 const ytpl = require("ytpl");
 const ytsr = require('ytsr');
 const isURL = new RegExp(/^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/gm);
@@ -18,6 +18,7 @@ const resolveSong = async (input) => {
       const video = res.items.find(i => i.type === "video" && !i.isUpcoming && !i.isLive && i.views > 0 && i.url);
       if (!video)
         throw BotError(new Error("No Valid Videos in Search Results"), "Failed to Find a Video", "URLUtil:resolveSong:search");
+      console.log(video);
     }
   } catch(e) {
     if (e instanceof BotError.ErrorObject) throw e;
