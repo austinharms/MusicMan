@@ -7,16 +7,16 @@ const BotError = function(error, userMsg, location, guildId, channelId, userId, 
   this.location = location;
   this.user = userId;
   this.isUserError = userError;
-  this.isCritical = critical;
 };
 
 const create = (error, userMsg, location, guildId = -1, channelId = -1, userId = -1, userError = false) => {
   const e = new BotError(error, userMsg, location, guildId, channelId, userId, userError);
   errorLog.push(e);
+  console.log(e);
   return e;
 }
 
+create.ErrorObject = BotError;
+create.ErrorLog = errorLog;
+
 module.exports = create;
-module.exports.CreateError = create;
-module.exports.ErrorObject = BotError;
-module.exports.Log = errorLog;

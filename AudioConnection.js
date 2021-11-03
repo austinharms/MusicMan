@@ -1,4 +1,4 @@
-const BotError, { ErrorObject } = require("./BotError");
+const BotError = require("./BotError");
 const ClientManager = require("./ClientManager");
 
 const AudioConnection = function(onDisconnect) {
@@ -16,7 +16,7 @@ const AudioConnection = function(onDisconnect) {
 };
 
 AudioConnection.prototype.Init = async function(clientIndex, guildId, channelId) {
-  try {
+  try { //TODO make it throw BotErrors for user errors
     this.client = ClientManager.GetClient(clientIndex);
     if (this.client === null) throw new Error("Client Index Out of Range");
     this.guild = await this.client.guilds.fetch(guildId);
@@ -28,7 +28,7 @@ AudioConnection.prototype.Init = async function(clientIndex, guildId, channelId)
     this.initialized = true;
     return true;
   } catch(e) {
-    if (e instanceof ErrorObject) throw e;
+    if (e instanceof BotError.ErrorObject) throw e;
     throw BotError(e,"Failed to Connect to VC", "AudioCon:Init", guildId, channelId);
   }
 };

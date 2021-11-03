@@ -48,26 +48,46 @@ const parseCommand = (msg) => {
 
     return command;
   } catch(e) {
-    SendError(msg.channel, BotError(e,"Failed to Interpret Command", "CmdMgr:parseCommand", msg.guild.id, msg.channel.id, msg.author.id));
-    return false;
+    throw BotError(e,"Failed to Interpret Command", "CmdMgr:parseCommand", msg.guild.id, msg.channel.id, msg.author.id);
   }
 };
 
-const onCommand = msg => {
+const onCommand = async msg => {
   try {
     if (!msg.content.startsWith(prefix) || msg.author.bot || !msg.guild)
       return false;
     
     const parsedCommand = parseCommand(msg);
     if (ServerlessCommands.hasOwnProperty(parsedCommand.command)) {
-      ServerlessCommands[parsedCommand.command](parsedCommand);
+      try {
+        await ServerlessCommands[parsedCommand.command](parsedCommand);
+      } catch(e) {
+        if (e instanceof BotError.ErrorObject) {
+          SendError(msg.channel, e);
+        } else {
+          SendError(msg.channel, BotError(e,"Failed to Run Command", "CmdMgr:onCommand:runServerlessCommand", msg.guild.id, msg.channel.id, msg.author.id));
+        }
+      }
     } else if (parsedCommand.command === "join") {
-      AudioManager.getConnection(parsedCommand.guild.id, parsedCommand.guildUser.voice.channel.id, parsedCommand.channelIndex);
+      try {
+        //Add Check if user in VC
+        await AudioManager.getConnection(parsedCommand.guild.id, parsedCommand.guildUser.voice.channel.id, parsedCommand.channelIndex);
+      } catch(e) {
+        if (e instanceof BotError.ErrorObject) {
+          SendError(msg.channel, e);
+        } else {
+          SendError(msg.channel, BotError(e,"Failed to Run Command", "CmdMgr:onCommand:runAudioCommand", msg.guild.id, msg.channel.id, msg.author.id));
+        }
+      }
     }
 
     return true;
   } catch(e) {
-    SendError(msg.channel, BotError(e,"Failed to Interpret Message", "CmdMgr:onCommand", msg.guild.id, msg.channel.id, msg.author.id));
+    if (e instanceof BotError.ErrorObject) {
+      SendError(msg.channel, e);
+    } else {
+      SendError(msg.channel, BotError(e,"Failed to Interpret Message", "CmdMgr:onCommand", msg.guild.id, msg.channel.id, msg.author.id));
+    }
     return false;
   }
 };
