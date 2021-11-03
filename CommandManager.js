@@ -70,8 +70,8 @@ const onCommand = async msg => {
       }
     } else if (parsedCommand.command === "join") {
       try {
-        //Add Check if user in VC
-        await AudioManager.getConnection(parsedCommand.guild.id, parsedCommand.guildUser.voice.channel.id, parsedCommand.channelIndex);
+        const userChannel = await AudioManager.getUserChannelId(parsedCommand.guildUser);
+        await AudioManager.getConnection(parsedCommand.guild.id, userChannel, parsedCommand.channelIndex);
       } catch(e) {
         if (e instanceof BotError.ErrorObject) {
           SendError(msg.channel, e);

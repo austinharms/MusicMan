@@ -46,9 +46,22 @@ AudioConnection.prototype.IsUserInChannel = async function(userId) {
 AudioConnection.prototype.Disconnect = function() {
   if (this.initialized) {
     this.voiceConnection.disconnect();
+    this.voiceConnection = null;
+    this.Destroy();
   } else {
+    this.Destroy();
     this.onLevae();
   }
 }
+
+AudioConnection.prototype.Destroy = function() {
+  this.initialized = false;
+  if (this.timeout !== null)
+    clearTimeout(this.timeout);
+  if (this.voiceConnection !== null) {
+    this.voiceConnection.removeListener("disconnect", this.onLevae);
+    this.voiceConnection.disconnect();
+  }
+};
 
 module.exports = AudioConnection;

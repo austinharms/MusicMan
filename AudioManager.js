@@ -19,20 +19,37 @@ const getConnection = async (guildId, channelId, clientIndex = -1) => {
         }
       } else {
         const connection = new AudioConnection(removeConnection.bind(this, guildId, clientNo));
-        await connection.Init(clientNo, guildId, channelId);
+        await connection.Init(clientNo, guildId, channelId).catch(e => {
+          connection.Destroy();
+          throw e;
+        });
         connections[guildId][clientNo] = connection;
         return connection;
       }
     } else {
       const foundClientIndex =  clientIndex === -1?0:clientIndex;
       const connection = new AudioConnection(removeConnection.bind(this, guildId, foundClientIndex));
-      await connection.Init(foundClientIndex, guildId, channelId);
+      await connection.Init(foundClientIndex, guildId, channelId).catch(e => {
+        connection.Destroy();
+        throw e;
+      });
       connections[guildId] = { [foundClientIndex]: connection };
       return connection;
     }
   } catch(e) {
     if (e instanceof BotError.ErrorObject) throw e;
     throw BotError(e, "Failed to get Connection", "AudioMan:getCon", guildId, channelId);
+  }
+};
+
+const getUserChannelId = async (user) => {
+  try {
+    if (!user.voice || !user.voice.channel) throw BotError(new Error("User Channel Not in Voice Channel"), "You must be in VC to run this Command", "AudioMan:getChan", user.guild.id, -1, user.id, true);
+    if (!user.voice.channel.joinable) throw BotError(new Error("User Channel Not Joinable"), "VC not Joinable (Permission Error)", "AudioMan:getChan", user.guild.id, user.voice.channel.id, user.id, true);
+    return user.voice.channel.id;
+  } catch(e) {
+    if (e instanceof BotError.ErrorObject) throw e;
+    throw BotError(e, "Failed to get Channel", "AudioMan:getChan", user.guild);
   }
 };
 
@@ -43,3 +60,4 @@ const removeConnection = async (guildId, clientIndex) => {
 
 exports.removeConnection = removeConnection;
 exports.getConnection = getConnection;
+exports.getUserChannelId = getUserChannelId;
