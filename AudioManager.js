@@ -54,8 +54,10 @@ const getUserChannelId = async (user) => {
 };
 
 const removeConnection = async (guildId, clientIndex) => {
-  connections[guildId][clientIndex] = null;
-  console.log(`Client: ${clientIndex}, disconnected from guild: ${guildId}`);
+  if (connections[guildId] && connections[guildId][clientIndex]) {
+    connections[guildId][clientIndex] = null;
+    console.log(`Client: ${clientIndex}, disconnected from guild: ${guildId}`);
+  }
 };
 
 exports.removeConnection = removeConnection;

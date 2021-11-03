@@ -11,7 +11,7 @@ const AudioConnection = function(onDisconnect) {
   this.voiceStream = null;
   this.voiceConnection = null;
   this.onLevae = onDisconnect;
-  this.boundDisconnect = this.Disconnect.bind(this);
+  this.boundDisconnect = function() {this.timeout = null; this.Disconnect();}.bind(this);
   this.timeout = setTimeout(this.boundDisconnect, 10000);
 };
 
