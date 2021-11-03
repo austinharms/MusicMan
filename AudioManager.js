@@ -1,32 +1,37 @@
+const BotError, { ErrorObject } = require("./BotError");
 const AudioConnection = require("./AudioConnection");
 const connections = {};
 
 const getConnection = async (guildId, channelId, clientIndex = -1) => {
-  if (connections[guildId]) {
-    let clientNo = clientIndex;
-    if (clientIndex === -1) {
-      clientNo = 0;
-      while(connections[guildId][clientNo] && connections[guildId][clientNo].GetChannelID() != channelId) ++clientNo; 
-    }
+  try {
+    if (connections[guildId]) {
+      let clientNo = clientIndex;
+      if (clientIndex === -1) {
+        clientNo = 0;
+        while(connections[guildId][clientNo] && connections[guildId][clientNo].GetChannelID() != channelId) ++clientNo; 
+      }
 
-    if (connections[guildId][clientNo]) {
-      if (connections[guildId][clientNo].GetChannelID() == channelId) {
-        return connections[guildId][clientNo];
+      if (connections[guildId][clientNo]) {
+        if (connections[guildId][clientNo].GetChannelID() == channelId) {
+          return connections[guildId][clientNo];
+        } else {
+          throw BotError(new Error("Client Already in Use"),"Channel already in use", "AudioMan:getCon", guildId, channelId);
+        }
       } else {
-        throw new Error("Client in use on diffrent channel");
+        const connection = new AudioConnection(removeConnection.bind(this, guildId, clientNo));
+        connection.Init(clientNo, guildId, channelId);
+        connections[guildId][clientNo] = connection;
+        return connection;
       }
     } else {
-      const connection = new AudioConnection(removeConnection.bind(this, guildId, clientNo));
-      connection.Init(clientNo, guildId, channelId);
-      connections[guildId][clientNo] = connection;
+      const foundClientIndex =  clientIndex === -1?0:clientIndex;
+      const connection = new AudioConnection(removeConnection.bind(this, guildId, foundClientIndex));
+      connection.Init(foundClientIndex, guildId, channelId);
+      connections[guildId] = { [foundClientIndex]: connection };
       return connection;
     }
-  } else {
-    const foundClientIndex =  clientIndex === -1?0:clientIndex;
-    const connection = new AudioConnection(removeConnection.bind(this, guildId, foundClientIndex));
-    connection.Init(foundClientIndex, guildId, channelId);
-    connections[guildId] = { [foundClientIndex]: connection };
-    return connection;
+  } catch(e) {
+    if (e instanceof ErrorObject) throw e;
   }
 };
 
