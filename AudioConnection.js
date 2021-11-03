@@ -38,7 +38,7 @@ AudioConnection.prototype.GetChannelID = function() {
   return this.voiceConnection.channel.id;
 };
 
-AudioConnection.prototype.IsUserInChannel = async function(userId) {
+AudioConnection.prototype.IsUserInChannel = function(userId) {
   if (!this.initialized) return false;
   return this.voiceConnection.channel.members.has(userId);
 };

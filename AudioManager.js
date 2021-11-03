@@ -42,6 +42,29 @@ const getConnection = async (guildId, channelId, clientIndex = -1) => {
   }
 };
 
+const hasConnection = async (guildId, channelId, clientIndex = -1) => {
+  try {
+    if (connections[guildId]) {
+      let clientNo = clientIndex;
+      if (clientIndex === -1) {
+        clientNo = 0;
+        while(connections[guildId][clientNo] && connections[guildId][clientNo].GetChannelID() != channelId) ++clientNo; 
+      }
+
+      if (connections[guildId][clientNo]) {
+        if (connections[guildId][clientNo].GetChannelID() == channelId) {
+          return connections[guildId][clientNo];
+        }
+      }
+    }
+
+    return false;
+  } catch(e) {
+    if (e instanceof BotError.ErrorObject) throw e;
+    throw BotError(e, "Failed to get Connection", "AudioMan:hasCon", guildId, channelId);
+  }
+};
+
 const getUserChannelId = async (user) => {
   try {
     if (!user.voice || !user.voice.channel) throw BotError(new Error("User Channel Not in Voice Channel"), "You must be in VC to run this Command", "AudioMan:getChan", user.guild.id, -1, user.id, true);
@@ -62,4 +85,5 @@ const removeConnection = async (guildId, clientIndex) => {
 
 exports.removeConnection = removeConnection;
 exports.getConnection = getConnection;
+exports.hasConnection = hasConnection;
 exports.getUserChannelId = getUserChannelId;

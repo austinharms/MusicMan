@@ -1,5 +1,5 @@
 const BotError = require("./BotError");
-const { SendEmbed, SendError } = require("./MessageUtilities");
+const { SendEmbed, SendError, ReactThumbsUp } = require("./MessageUtilities");
 const AudioManager = require("./AudioManager");
 let prefix = "~";
 
@@ -7,6 +7,22 @@ const ServerlessCommands = {
   "help": async function(command) {
     await SendEmbed(command.channel, "Help!", "this is the help page");
   }
+};
+
+const AudioCommands = {
+  "join": {
+    func: async function(command, connection) {
+      await ReactThumbsUp(command.msg);
+    },
+    requiresExistingConnection: false,
+  },
+  "dc": {
+    func: async function(command, connection) {
+      connection.Disconnect();
+      await ReactThumbsUp(command.msg);
+    },
+    requiresExistingConnection: true,
+  },
 };
 
 const isCharNumber = (c) => c >= '0' && c <= '9';
@@ -43,7 +59,7 @@ const parseCommand = (msg) => {
         delete command.channelString;
       }
       
-      command.command = command.command.substring(command.channelString.length);
+      command.command = command.command.substring(command.channelString.length).toLowerCase();
     }
 
     return command;
@@ -68,10 +84,20 @@ const onCommand = async msg => {
           SendError(msg.channel, BotError(e,"Failed to Run Command", "CmdMgr:onCommand:runServerlessCommand", msg.guild.id, msg.channel.id, msg.author.id));
         }
       }
-    } else if (parsedCommand.command === "join") {
+    } else if (AudioCommands.hasOwnProperty(parsedCommand.command)) {
       try {
         const userChannel = await AudioManager.getUserChannelId(parsedCommand.guildUser);
-        await AudioManager.getConnection(parsedCommand.guild.id, userChannel, parsedCommand.channelIndex);
+        const audioCommand = AudioCommands[parsedCommand.command];
+        let connection = null;
+        if (audioCommand.requiresExistingConnection) {
+          connection = await AudioManager.hasConnection(parsedCommand.guild.id, userChannel, parsedCommand.channelIndex);
+          if (connection === false)
+            throw BotError(new Error("User not in Bot VC"), "You must be in a Bot VC to run this Command", "CmdMgr:onCommand:runAudioCommand", parsedCommand.guild.id, userChannel, parsedCommand.channelIndex, true);
+        } else {
+          connection = await AudioManager.getConnection(parsedCommand.guild.id, userChannel, parsedCommand.channelIndex);
+        }
+
+        await audioCommand.func(parsedCommand, connection);
       } catch(e) {
         if (e instanceof BotError.ErrorObject) {
           SendError(msg.channel, e);
