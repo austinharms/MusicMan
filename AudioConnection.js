@@ -12,7 +12,7 @@ const AudioConnection = function(onDisconnect) {
   this.voiceConnection = null;
   this.onLevae = onDisconnect;
   this.boundDisconnect = function() {this.timeout = null; this.Disconnect();}.bind(this);
-  this.timeout = setTimeout(this.boundDisconnect, 10000);
+  this.timeout = setTimeout(this.boundDisconnect, 100000);
 };
 
 AudioConnection.prototype.Init = async function(clientIndex, guildId, channelId) {

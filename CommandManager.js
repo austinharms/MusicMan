@@ -26,7 +26,7 @@ const AudioCommands = {
   },
   "play": {
     func: async function(command, connection) {
-      await URLUtilities.ResolveSong(command.text);
+      await URLUtilities.ResolveSong(command.parameters);
       await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: false,
@@ -49,6 +49,7 @@ const parseCommand = (msg) => {
     const parts = command.text.split(" ").filter(part => part.length > 0);
     command.fullCommand = parts.shift();
     command.splitText = parts;
+    command.parameters = command.splitText.join(" ");
     command.command = command.fullCommand.substring(prefix.length);
     command.channelIndex = -1;
     if (isCharNumber(command.command.charAt(0))) {
