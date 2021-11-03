@@ -30,7 +30,7 @@ const isCharNumber = (c) => c >= '0' && c <= '9';
 const parseCommand = (msg) => {
   try {
     const command = {
-      text: msg.content,
+      text: msg.content.trim(),
       user: msg.author,
       guildUser: msg.member,
       channel: msg.channel,
@@ -105,6 +105,8 @@ const onCommand = async msg => {
           SendError(msg.channel, BotError(e,"Failed to Run Command", "CmdMgr:onCommand:runAudioCommand", msg.guild.id, msg.channel.id, msg.author.id));
         }
       }
+    } else {
+      await SendEmbed(msg.channel, "What?", `Unknow Command\nUse **${prefix}help** to view list of Commands`);
     }
 
     return true;
