@@ -64,4 +64,18 @@ AudioConnection.prototype.Destroy = function() {
   }
 };
 
+AudioConnection.prototype.Queue = async function(song, priority = false) {
+  if (priority) {
+    this.queue.unshift(song);
+    await this.playNext();
+  } else {
+    this.queue.push(song);
+    if (this.current === null)
+      await this.playNext();
+  }
+};
+
+AudioConnection.prototype.playNext = async function() {
+};
+
 module.exports = AudioConnection;

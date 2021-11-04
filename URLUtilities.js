@@ -53,7 +53,7 @@ const resolveSong = async (input) => {
         }
 
         const urlExperation = (parseInt(video.url.split("expire")[1].split("&")[0].substring(1)) - 10) * 1000;
-        return [{
+        const song = {
           isYT: true,
           url: videoInfo.video_url,
           title: videoInfo.videoDetails.title,
@@ -63,7 +63,19 @@ const resolveSong = async (input) => {
           playableURL: video.url,
           urlExperation,
           type: ((video.isHLS || video.isDashMPD)?"STREAM":"CHUNKED"),
-        }];
+        };
+
+        if (song.type === "STREAM") {
+          song.live_chunk_readahead = videoInfo.live_chunk_readahead;
+          song.itag = video.itag;
+          if (video.isLive) {
+            song.format = video.isDashMPD ? "LIVE-dash-mpd" : "LIVE-m3u8";
+          } else {
+            song.format = video.isDashMPD ? "dash-mpd" : "m3u8";
+          }
+        }
+
+        return [song];
       } else {
         return [{
           isYT: false,
@@ -133,6 +145,16 @@ const updatePlaybackURL = async (song) => {
     song.urlExperation = urlExperation;
     song.playableURL = video.url;
     song.type = ((video.isHLS || video.isDashMPD)?"STREAM":"CHUNKED");
+
+    if (song.type === "STREAM") {
+      song.live_chunk_readahead = videoInfo.live_chunk_readahead;
+      song.itag = video.itag;
+      if (video.isLive) {
+        song.format = video.isDashMPD ? "LIVE-dash-mpd" : "LIVE-m3u8";
+      } else {
+        song.format = video.isDashMPD ? "dash-mpd" : "m3u8";
+      }
+    }
   } catch(e) {
     if (e instanceof BotError.ErrorObject) throw e;
     throw BotError(e, "Failed to Update Song", "URLUtil:resolveSong");
