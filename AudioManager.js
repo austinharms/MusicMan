@@ -20,7 +20,7 @@ const getConnection = async (guildId, channelId, clientIndex = -1) => {
       } else {
         const connection = new AudioConnection(removeConnection.bind(this, guildId, clientNo));
         await connection.Init(clientNo, guildId, channelId).catch(e => {
-          connection.Destroy();
+          connection.Disconnect();
           throw e;
         });
         connections[guildId][clientNo] = connection;
@@ -30,7 +30,7 @@ const getConnection = async (guildId, channelId, clientIndex = -1) => {
       const foundClientIndex =  clientIndex === -1?0:clientIndex;
       const connection = new AudioConnection(removeConnection.bind(this, guildId, foundClientIndex));
       await connection.Init(foundClientIndex, guildId, channelId).catch(e => {
-        connection.Destroy();
+        connection.Disconnect();
         throw e;
       });
       connections[guildId] = { [foundClientIndex]: connection };

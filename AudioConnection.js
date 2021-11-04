@@ -14,7 +14,7 @@ const AudioConnection = function(onDisconnect) {
   this.transcoderStream = null;
   this.voiceConnection = null;
   this.onLevae = onDisconnect;
-  this.boundDisconnect = function() {this.timeout = null; this.Disconnect();}.bind(this);
+  this.boundDisconnect = this.Disconnect.bind(this);
   this.timeout = setTimeout(this.boundDisconnect, 10000);
 };
 
@@ -27,7 +27,7 @@ AudioConnection.prototype.Init = async function(clientIndex, guildId, channelId)
     if (this.channel === null) throw new Error("Failed to get Channel from Guild");
     if (!this.channel.joinable) throw new Error("Channel Not Joinable");
     this.voiceConnection = await this.channel.join();
-    this.voiceConnection.on("disconnect", this.onLevae);
+    this.voiceConnection.on("disconnect", this.onVoiceDisconnect.bind(this));
     this.initialized = true;
     return true;
   } catch(e) {
@@ -46,39 +46,25 @@ AudioConnection.prototype.IsUserInChannel = function(userId) {
   return this.voiceConnection.channel.members.has(userId);
 };
 
+AudioConnection.prototype.onVoiceDisconnect = function() {
+  if (this.timeout !== null) {
+    clearTimeout(this.timeout);
+    this.timeout = null;
+  }
+
+  this.cleanStreams();
+  this.onLevae();
+};
+
 AudioConnection.prototype.Disconnect = function() {
   if (this.initialized) {
     this.voiceConnection.disconnect();
-    this.voiceConnection = null;
-    this.Destroy();
   } else {
-    this.Destroy();
     this.onLevae();
   }
-}
-
-AudioConnection.prototype.Destroy = function() {
-  this.initialized = false;
-  if (this.timeout !== null)
-    clearTimeout(this.timeout);
-  if (this.voiceConnection !== null) {
-    this.voiceConnection.removeListener("disconnect", this.onLevae);
-    this.voiceConnection.disconnect();
-  }
 };
 
-AudioConnection.prototype.Queue = async function(song, priority = false) {
-  if (priority) {
-    this.queue.unshift(song);
-    await this.playNext();
-  } else {
-    this.queue.push(song);
-    if (this.current === null)
-      await this.playNext();
-  }
-};
-
-AudioConnection.prototype.playNext = async function() {
+AudioConnection.prototype.cleanStreams = function() {
   if (this.voiceStream !== null) {
     this.voiceStream.destroy();
     this.voiceStream = null;
@@ -94,29 +80,59 @@ AudioConnection.prototype.playNext = async function() {
     this.transcoderStream.destroy();
     this.requestStream = null;
   }
+};
 
-  if (this.timeout !== null) {
-    clearTimeout(this.timeout);
-    this.timeout = null;
+AudioConnection.prototype.Queue = async function(song, priority = false) {
+  try {
+    if (priority) {
+      this.queue.unshift(song);
+      await this.playNext();
+    } else {
+      this.queue.push(song);
+      if (this.current === null)
+        await this.playNext();
+    }
+  } catch(e) {
+    if (e instanceof BotError.ErrorObject) throw e;
+    throw BotError(e,"Failed to Queue Song", "AudioCon:queue", this.guild.id, this.channel.id);
   }
+};
 
-  this.current = null;
-  if (this.queue.length > 0) {
-    this.current = this.queue.shift();
-    const { req, transcoder} = AudioUtilities.CreateStreams(this.current);
-    this.requestStream = req;
-    this.transcoderStream = transcoder;
-    this.voiceStream = this.voiceConnection.play(this.transcoderStream, { volume: 0.5 });
-    this.voiceStream.on("finish", this.onEnd.bind(this));
-  } else {
-    this.timeout = setTimeout(this.boundDisconnect, 10000);
+AudioConnection.prototype.playNext = async function() {
+  if (!this.initialized)
+    throw BotError(new Error("Connection not Initialized"),"Failed to Play Song", "AudioCon:playNext", this.guild.id, this.channel.id);
+    
+  try {
+    this.cleanStreams();
+    if (this.timeout !== null) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+
+    this.current = null;
+    if (this.queue.length > 0) {
+      this.current = this.queue.shift();
+      const { req, transcoder} = await AudioUtilities.CreateStreams(this.current);
+      this.requestStream = req;
+      this.transcoderStream = transcoder;
+      this.voiceStream = this.voiceConnection.play(this.transcoderStream, { volume: 0.5, type: "converted" });
+      this.voiceStream.on("finish", this.onEnd.bind(this));
+    } else {
+      this.timeout = setTimeout(this.boundDisconnect, 10000);
+    }
+
+    return true;
+  } catch(e) {
+    if (this.timeout === null)
+      this.timeout = setTimeout(this.boundDisconnect, 10000);
+    if (e instanceof BotError.ErrorObject) throw e;
+    throw BotError(e,"Failed to Play Song", "AudioCon:playNext", this.guild.id, this.channel.id);
   }
-
-  return true;
 };
 
 AudioConnection.prototype.onEnd = async function() {
   await this.playNext();
+  console.log("Song End");
 };
 
 module.exports = AudioConnection;

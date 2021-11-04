@@ -73,6 +73,8 @@ const resolveSong = async (input) => {
           } else {
             song.format = video.isDashMPD ? "dash-mpd" : "m3u8";
           }
+        } else {
+          song.contentLength = parseInt(video.contentLength);
         }
 
         return [song];
@@ -124,7 +126,7 @@ const resolveSong = async (input) => {
 const updatePlaybackURL = async (song) => {
   try {
     if (!song.isYT) return;
-    if (song.playableURL === null || urlExperation <= Date.now()) {
+    if (song.playableURL === null || song.urlExperation <= Date.now()) {
       const videoInfo = await ytdl.getInfo(song.url, {
         requestOptions: {
           headers: HEADERS,
@@ -154,6 +156,8 @@ const updatePlaybackURL = async (song) => {
         } else {
           song.format = video.isDashMPD ? "dash-mpd" : "m3u8";
         }
+      } else {
+        song.contentLength = parseInt(video.contentLength);
       }
     }
   } catch(e) {
