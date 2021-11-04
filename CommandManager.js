@@ -38,7 +38,7 @@ const isCharNumber = (c) => c >= '0' && c <= '9';
 const parseCommand = (msg) => {
   try {
     const command = {
-      text: msg.content.trim(),
+      text: msg.content,
       user: msg.author,
       guildUser: msg.member,
       channel: msg.channel,
@@ -49,7 +49,7 @@ const parseCommand = (msg) => {
     const parts = command.text.split(" ").filter(part => part.length > 0);
     command.fullCommand = parts.shift();
     command.splitText = parts;
-    command.parameters = command.splitText.join(" ");
+    command.parameters = command.splitText.join(" ").trim();
     command.command = command.fullCommand.substring(prefix.length);
     command.channelIndex = -1;
     if (isCharNumber(command.command.charAt(0))) {
