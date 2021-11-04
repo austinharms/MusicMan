@@ -71,4 +71,11 @@ const createStreams = async function(song) {
       transcoder.emit('progress', chunk.length, downloaded, contentLength);
     };
   }
+
+  return {
+    req,
+    transcoder,
+  };
 };
+
+module.exports.CreateStreams= createStreams;

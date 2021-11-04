@@ -1,5 +1,6 @@
 const BotError = require("./BotError");
 const ClientManager = require("./ClientManager");
+const AudioUtilities = require("./AudioUtilities");
 
 const AudioConnection = function(onDisconnect) {
   this.initialized = false;
@@ -9,10 +10,12 @@ const AudioConnection = function(onDisconnect) {
   this.queue = [];
   this.current = null;
   this.voiceStream = null;
+  this.requestStream = null;
+  this.transcoderStream = null;
   this.voiceConnection = null;
   this.onLevae = onDisconnect;
   this.boundDisconnect = function() {this.timeout = null; this.Disconnect();}.bind(this);
-  this.timeout = setTimeout(this.boundDisconnect, 100000);
+  this.timeout = setTimeout(this.boundDisconnect, 10000);
 };
 
 AudioConnection.prototype.Init = async function(clientIndex, guildId, channelId) {
@@ -76,6 +79,44 @@ AudioConnection.prototype.Queue = async function(song, priority = false) {
 };
 
 AudioConnection.prototype.playNext = async function() {
+  if (this.voiceStream !== null) {
+    this.voiceStream.destroy();
+    this.voiceStream = null;
+  }
+
+  if (this.requestStream !== null) {
+    this.requestStream.destroy();
+    this.requestStream.end();
+    this.requestStream = null;
+  }
+
+  if (this.transcoderStream !== null) {
+    this.transcoderStream.destroy();
+    this.requestStream = null;
+  }
+
+  if (this.timeout !== null) {
+    clearTimeout(this.timeout);
+    this.timeout = null;
+  }
+
+  this.current = null;
+  if (this.queue.length > 0) {
+    this.current = this.queue.shift();
+    const { req, transcoder} = AudioUtilities.CreateStreams(this.current);
+    this.requestStream = req;
+    this.transcoderStream = transcoder;
+    this.voiceStream = this.voiceConnection.play(this.transcoderStream, { volume: 0.5 });
+    this.voiceStream.on("finish", this.onEnd.bind(this));
+  } else {
+    this.timeout = setTimeout(this.boundDisconnect, 10000);
+  }
+
+  return true;
+};
+
+AudioConnection.prototype.onEnd = async function() {
+  await this.playNext();
 };
 
 module.exports = AudioConnection;

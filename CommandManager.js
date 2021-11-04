@@ -26,7 +26,8 @@ const AudioCommands = {
   },
   "play": {
     func: async function(command, connection) {
-      await URLUtilities.ResolveSong(command.parameters);
+      //TODO fix to take more than the first song
+      await connection.Queue((await URLUtilities.ResolveSong(command.parameters))[0]);
       await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: false,

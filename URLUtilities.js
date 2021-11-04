@@ -124,35 +124,36 @@ const resolveSong = async (input) => {
 const updatePlaybackURL = async (song) => {
   try {
     if (!song.isYT) return;
-    if (song.playableURL === null || urlExperation <= Date.now())
-    const videoInfo = await ytdl.getInfo(song.url, {
-      requestOptions: {
-        headers: HEADERS,
-      },
-    });
+    if (song.playableURL === null || urlExperation <= Date.now()) {
+      const videoInfo = await ytdl.getInfo(song.url, {
+        requestOptions: {
+          headers: HEADERS,
+        },
+      });
 
-    if (videoInfo.videoDetails.isPrivate)
-      throw BotError(new Error("Cannot Play Private YT Video"), "Cannot play Video, Video is Private", "URLUtil:resolveSong");
+      if (videoInfo.videoDetails.isPrivate)
+        throw BotError(new Error("Cannot Play Private YT Video"), "Cannot play Video, Video is Private", "URLUtil:resolveSong");
 
-    let video = null;
-    try{
-      video = ytdl.chooseFormat(videoInfo.formats, { quality: "highestaudio", filter: 'audioonly' });
-    } catch(e) {
-      throw BotError(e, "Cannot play Video, Invalid Format", "URLUtil:resolveSong:chooseFormat");
-    }
+      let video = null;
+      try{
+        video = ytdl.chooseFormat(videoInfo.formats, { quality: "highestaudio", filter: 'audioonly' });
+      } catch(e) {
+        throw BotError(e, "Cannot play Video, Invalid Format", "URLUtil:resolveSong:chooseFormat");
+      }
 
-    const urlExperation = parseInt(video.url.split("expire")[1].split("&")[0].substring(1)) * 1000;
-    song.urlExperation = urlExperation;
-    song.playableURL = video.url;
-    song.type = ((video.isHLS || video.isDashMPD)?"STREAM":"CHUNKED");
+      const urlExperation = parseInt(video.url.split("expire")[1].split("&")[0].substring(1)) * 1000;
+      song.urlExperation = urlExperation;
+      song.playableURL = video.url;
+      song.type = ((video.isHLS || video.isDashMPD)?"STREAM":"CHUNKED");
 
-    if (song.type === "STREAM") {
-      song.live_chunk_readahead = videoInfo.live_chunk_readahead;
-      song.itag = video.itag;
-      if (video.isLive) {
-        song.format = video.isDashMPD ? "LIVE-dash-mpd" : "LIVE-m3u8";
-      } else {
-        song.format = video.isDashMPD ? "dash-mpd" : "m3u8";
+      if (song.type === "STREAM") {
+        song.live_chunk_readahead = videoInfo.live_chunk_readahead;
+        song.itag = video.itag;
+        if (video.isLive) {
+          song.format = video.isDashMPD ? "LIVE-dash-mpd" : "LIVE-m3u8";
+        } else {
+          song.format = video.isDashMPD ? "dash-mpd" : "m3u8";
+        }
       }
     }
   } catch(e) {
