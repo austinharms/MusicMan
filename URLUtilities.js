@@ -13,9 +13,7 @@ const resolveSong = async (input) => {
     if (input.length <= 2)
       throw BotError(new Error("Invalid Input"), "Invalid URL/Search Input, Must be Longer Than 2 Characters", "URLUtil:resolveSong", -1, -1, -1, true);
 
-    //Had to store value or the if failed. why? how? TODO: fix this
-    const urlTest = isURL.test(input);
-    if (urlTest) {
+    if (validateURL(input)) {
       if (ytpl.validateID(input)) {
         return (await ytpl(input, {
           requestOptions: {
@@ -170,6 +168,19 @@ const getRequestHeaders = () => {
   return Object.assign({}, HEADERS);
 };
 
+const validateURL = (string) => {
+  let url;
+  
+  try {
+    url = new URL(string);
+  } catch {
+    return false;  
+  }
+
+  return url.protocol === "http:" || url.protocol === "https:";
+};
+
 module.exports.ResolveSong = resolveSong;
 module.exports.UpdatePlaybackURL = updatePlaybackURL;
 module.exports.GetRequestHeaders = getRequestHeaders;
+module.exports.ValidateURL = validateURL;

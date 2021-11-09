@@ -82,13 +82,13 @@ AudioConnection.prototype.cleanStreams = function() {
   }
 };
 
-AudioConnection.prototype.Queue = async function(song, priority = false) {
+AudioConnection.prototype.Queue = async function(priority, songs) {
   try {
     if (priority) {
-      this.queue.unshift(song);
+      this.queue.unshift(...songs);
       await this.playNext();
     } else {
-      this.queue.push(song);
+      this.queue.push(...song);
       if (this.current === null)
         await this.playNext();
     }
@@ -96,6 +96,11 @@ AudioConnection.prototype.Queue = async function(song, priority = false) {
     if (e instanceof BotError.ErrorObject) throw e;
     throw BotError(e,"Failed to Queue Song", "AudioCon:queue", this.guild.id, this.channel.id);
   }
+};
+
+AudioConnection.prototype.Skip = async function(count = 1) {
+  if (count > 1) this.queue.splice(0,count-1);
+  await this.playNext();
 };
 
 AudioConnection.prototype.playNext = async function() {

@@ -26,11 +26,17 @@ const AudioCommands = {
   },
   "play": {
     func: async function(command, connection) {
-      //TODO fix to take more than the first song
-      await connection.Queue((await URLUtilities.ResolveSong(command.parameters))[0]);
+      await connection.Queue(false, (await URLUtilities.ResolveSong(command.parameters)));
       await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: false,
+  },
+  "skip": {
+    func: async function(command, connection) {
+      await connection.Skip();
+      await ReactThumbsUp(command.msg);
+    },
+    requiresExistingConnection: true,
   },
 };
 
