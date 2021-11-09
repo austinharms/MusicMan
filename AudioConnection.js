@@ -82,13 +82,33 @@ AudioConnection.prototype.cleanStreams = function() {
   }
 };
 
+({
+  isYT: true,
+  url: video.url,
+  title: video.title,
+  thumbnail: video.bestThumbnail.url,
+  length: video.durationSec,
+  offset: 0,
+  playableURL: null,
+  urlExperation: null,
+  type: null,
+})
+
+AudioConnection.GetQueue = () => {
+  if (this.queue.length === 0) {
+    return "Nothing Queued";
+  } else {
+    return this.queue.slice(0,20).reduce((text, video, index) => `${text}${index + 1}.[${video.title}](${video.url}), Duration: ${video.length}\n`);
+  }
+};
+
 AudioConnection.prototype.Queue = async function(priority, songs) {
   try {
     if (priority) {
       this.queue.unshift(...songs);
       await this.playNext();
     } else {
-      this.queue.push(...song);
+      this.queue.push(...songs);
       if (this.current === null)
         await this.playNext();
     }

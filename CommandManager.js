@@ -38,6 +38,12 @@ const AudioCommands = {
     },
     requiresExistingConnection: true,
   },
+  "queue": {
+    func: async function(command, connection) {
+      await SendEmbed("Queue", connection.GetQueue());
+    },
+    requiresExistingConnection: true,
+  },
 };
 
 const isCharNumber = (c) => c >= '0' && c <= '9';
