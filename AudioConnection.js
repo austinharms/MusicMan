@@ -82,18 +82,6 @@ AudioConnection.prototype.cleanStreams = function() {
   }
 };
 
-({
-  isYT: true,
-  url: video.url,
-  title: video.title,
-  thumbnail: video.bestThumbnail.url,
-  length: video.durationSec,
-  offset: 0,
-  playableURL: null,
-  urlExperation: null,
-  type: null,
-})
-
 AudioConnection.GetQueue = () => {
   if (this.queue.length === 0) {
     return "Nothing Queued";
