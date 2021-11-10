@@ -140,4 +140,13 @@ AudioConnection.prototype.onEnd = async function() {
   console.log("Song End");
 };
 
+AudioConnection.prototype.GetQueue = function(page = 1) {
+  if (this.queue.length === 0) return "Nothing Queued";
+  const songsPerPage = 20;
+  page = Math.min(Math.max(page, 1), Math.ceil(this.queue.length/songsPerPage));
+  queuePage = this.queue.slice((page - 1) * songsPerPage, page * songsPerPage);
+  const queueString = queuePage.reduce((msg, song, index) => `${msg}${((page - 1) * songsPerPage) + (index + 1)}: [${song.title}](${song.url}), Duration: ${song.length}s\n`, "");
+  return `${queueString}\n*Page ${page}/${Math.ceil(this.queue.length/songsPerPage)}*`;
+};
+
 module.exports = AudioConnection;

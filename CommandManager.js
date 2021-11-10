@@ -36,9 +36,19 @@ const AudioCommands = {
       let count = 1;
       if(command.splitText.length > 0 && !isNaN(command.splitText[0]))
         count = parseInt(command.splitText[0]);
-        
+      if (count < 1 || count > connection.queue.length)
+        throw BotError(new Error("Index out of range"), "Invalid Skip Count", "CmdMgr:skip", command.guild.id, command.channel.id, command.user.id, true);
       await connection.Skip(count);
       await ReactThumbsUp(command.msg);
+    },
+    requiresExistingConnection: true,
+  },
+  "queue": {
+    func: async function(command, connection) {
+      let page = 1;
+      if(command.splitText.length > 0 && !isNaN(command.splitText[0]))
+        page = parseInt(command.splitText[0]);
+      await SendEmbed(command.channel, "Queue:", connection.GetQueue(page));
     },
     requiresExistingConnection: true,
   },
