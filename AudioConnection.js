@@ -88,7 +88,7 @@ AudioConnection.prototype.Queue = async function(priority, songs) {
       this.queue.unshift(...songs);
       await this.playNext();
     } else {
-      this.queue.push(...song);
+      this.queue.push(...songs);
       if (this.current === null)
         await this.playNext();
     }

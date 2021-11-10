@@ -33,7 +33,11 @@ const AudioCommands = {
   },
   "skip": {
     func: async function(command, connection) {
-      await connection.Skip();
+      let count = 1;
+      if(command.splitText.length > 0 && !isNaN(command.splitText[0]))
+        count = parseInt(command.splitText[0]);
+        
+      await connection.Skip(count);
       await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: true,
