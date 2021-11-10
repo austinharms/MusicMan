@@ -149,4 +149,18 @@ AudioConnection.prototype.GetQueue = function(page = 1) {
   return `${queueString}\n*Page ${page}/${Math.ceil(this.queue.length/songsPerPage)}*`;
 };
 
+AudioConnection.prototype.GetCurrent = function() {
+  if (this.current === null) return "Nothing Playing";
+
+  const barLength = 40;
+  const time = new Date().getTime();
+  let currentPauseTime = 0;
+  if (this.voiceStream.pausedSince !== null)
+    currentPauseTime = time - this.voiceStream.pausedSince;
+  const played = Math.floor((((time - this.voiceStream.startTime) - this.voiceStream._pausedTime) - currentPauseTime)/1000)  + this.current.offset;
+  const barFilled = Math.max(Math.min(Math.floor(played * barLength / this.current.length), barLength), 0);
+  const progressBar = `[**${"=".repeat(barFilled)}${"-".repeat(barLength - barFilled)}**]`;
+  return `${this.current.title}\n${this.current.url}\n${progressBar}\nProgress: ${played}/${this.current.length}s`;
+};
+
 module.exports = AudioConnection;
