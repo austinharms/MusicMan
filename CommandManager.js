@@ -58,6 +58,12 @@ const AudioCommands = {
     },
     requiresExistingConnection: true,
   },
+  "pause": {
+    func: async function(command, connection) {
+      await SendEmbed(command.channel, connection.Pause(), "");
+    },
+    requiresExistingConnection: true,
+  },
 };
 
 const isCharNumber = (c) => c >= '0' && c <= '9';

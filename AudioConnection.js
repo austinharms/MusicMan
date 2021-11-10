@@ -14,6 +14,7 @@ const AudioConnection = function(onDisconnect) {
   this.transcoderStream = null;
   this.voiceConnection = null;
   this.onLevae = onDisconnect;
+  this.paused = false;
   this.boundDisconnect = this.Disconnect.bind(this);
   this.timeout = setTimeout(this.boundDisconnect, 10000);
 };
@@ -108,6 +109,7 @@ AudioConnection.prototype.playNext = async function() {
     throw BotError(new Error("Connection not Initialized"),"Failed to Play Song", "AudioCon:playNext", this.guild.id, this.channel.id);
     
   try {
+    this.paused = false;
     this.cleanStreams();
     if (this.timeout !== null) {
       clearTimeout(this.timeout);
@@ -160,7 +162,24 @@ AudioConnection.prototype.GetCurrent = function() {
   const played = Math.floor((((time - this.voiceStream.startTime) - this.voiceStream._pausedTime) - currentPauseTime)/1000)  + this.current.offset;
   const barFilled = Math.max(Math.min(Math.floor(played * barLength / this.current.length), barLength), 0);
   const progressBar = `[**${"=".repeat(barFilled)}${"-".repeat(barLength - barFilled)}**]`;
-  return `${this.current.title}\n${this.current.url}\n${progressBar}\nProgress: ${played}/${this.current.length}s`;
+  return `${this.current.title}\n${this.current.url}\n${progressBar}\nProgress: ${played}/${this.current.length}s\t${this.paused?"(***Paused***)":""}`;
+};
+
+AudioConnection.prototype.Pause = function() {
+  if (this.current === null || this.voiceStream === null)
+    throw BotError(new Error("Cant Pause Null stream"), "Failed to Pause, Nothing Playing", "AudioCon:Pause", this.guild.id, -1, -1, true);
+  if (this.paused) {
+    //WHY do I need to do this for it to work? TODO: Fix this
+    this.voiceStream.resume();
+    this.voiceStream.pause();
+    this.voiceStream.resume();
+    this.paused = false;
+    return "Resumed";
+  } else {
+    this.voiceStream.pause();
+    this.paused = true;
+    return "Paused";
+  }
 };
 
 module.exports = AudioConnection;
