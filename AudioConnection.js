@@ -77,6 +77,14 @@ AudioConnection.prototype.cleanStreams = function() {
   }
 };
 
+AudioConnection.GetQueue = () => {
+  if (this.queue.length === 0) {
+    return "Nothing Queued";
+  } else {
+    return this.queue.slice(0,20).reduce((text, video, index) => `${text}${index + 1}.[${video.title}](${video.url}), Duration: ${video.length}\n`);
+  }
+};
+
 AudioConnection.prototype.Queue = async function(priority, songs) {
   try {
     if (priority) {
