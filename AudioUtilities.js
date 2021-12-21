@@ -45,11 +45,10 @@ const pipeAndSetEvents = (req, stream, end) => {
   req.pipe(stream, { end });
 };
 
-const createStreams = async function (song) {
+const createStreams = async function (song, base = 0) {
   try {
     const reqOptions = Object.assign({}, baseRequestOptions);
     if (song.isYT) reqOptions.headers = URLUtilities.GetRequestHeaders();
-
     await URLUtilities.UpdatePlaybackURL(song);
 
     let req;
@@ -57,9 +56,12 @@ const createStreams = async function (song) {
     let contentLength,
       downloaded = 0;
 
-    const transcoder = new FFmpeg({
-      args: baseArgs,
-    });
+    base = Math.min(Math.max(base, -50), 50);
+    const ffmpegArgs = [...baseArgs, "-af", `bass=g=${base}`, "-ss", `${song.offset}`];
+
+    const streams = { 
+      transcoder: new FFmpeg({ args: ffmpegArgs }),
+    };
 
     if (song.type === "STREAM") {
       const isLive = song.format.startsWith("LIVE-");
@@ -76,17 +78,16 @@ const createStreams = async function (song) {
       });
 
       req.on("progress", (segment, totalSegments) => {
-        transcoder.emit("progress", segment.size, segment.num, totalSegments);
+        streams.transcoder.emit("progress", segment.size, segment.num, totalSegments);
       });
-      pipeAndSetEvents(req, transcoder, shouldEnd);
-    } else {
-      // if (song.type === "CHUNKED") { // Just assume it's chunked
+      pipeAndSetEvents(req, streams.transcoder, shouldEnd);
+    } else { // if (song.type === "CHUNKED") { // Just assume it's chunked
       const ondata = (chunk) => {
         downloaded += chunk.length;
-        transcoder.emit("progress", chunk.length, downloaded, contentLength);
+        streams.transcoder.emit("progress", chunk.length, downloaded, contentLength);
       };
 
-      let start = song.offset;
+      let start = 0;
       let end = start + dlChunkSize;
       contentLength = song.contentLength - start;
 
@@ -101,24 +102,29 @@ const createStreams = async function (song) {
         req = miniget(song.playableURL, reqOptions);
         req.on("data", ondata);
         req.on("end", () => {
-          if (transcoder.destroyed) {
-            return;
-          }
+          if (streams.transcoder.destroyed) return;
           if (end) {
             start = end + 1;
             end += dlChunkSize;
             getNextChunk();
           }
         });
-        pipeAndSetEvents(req, transcoder, shouldEnd);
+        pipeAndSetEvents(req, streams.transcoder, shouldEnd);
       };
       getNextChunk();
     }
 
-    return {
-      req,
-      transcoder,
-    };
+    streams.request = req;
+    streams.id = 0;
+    streams.destroy = (function() {
+      this.transcoder.destroy();
+      this.transcoder.end();
+      this.request.destroy();
+      this.request.end();
+      console.log("Streams Destroyed", this.id);
+    }).bind(streams);
+
+    return streams;
   } catch (e) {
     if (e instanceof BotError.ErrorObject) throw e;
     throw BotError(e, "Failed to Create Stream", "AudioUtil:createStream");
