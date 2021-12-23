@@ -4,8 +4,20 @@ const { SendEmbed, SendError, ReactThumbsUp } = require("./MessageUtilities");
 const AudioManager = require("./AudioManager");
 let prefix = "~";
 
-const ServerlessCommands = {
-  "help": async function(command) {
+const expandCommands = function(cmds) {
+  const newCmds = {};
+  const keys = Object.keys(cmds);
+  keys.forEach(k => {
+    const subKeys = k.split(/,\s?/);
+    const command = cmds[k];
+    subKeys.forEach(sk => newCmds[sk] = command);
+  });
+  return newCmds;
+};
+
+
+const ServerlessCommands = expandCommands({
+  "help, h, he, what, ?, how": async function(command) {
     await SendEmbed(command.channel, "Help!", 
     `***Commands:***
     *Help*: Shows this message
@@ -18,46 +30,46 @@ const ServerlessCommands = {
     *Current*: Show the current song
     *Pause*: Pause/Resume the current song`);
   },
-  "bulkdel": async function(command) {
-    for (let i = 0; i < 500; ++i) {
-      const msgs = await command.channel.messages.fetch({after: 923526829992714250, limit: 100});
-      await command.channel.bulkDelete(msgs);
-    }
+  // "bulkdel": async function(command) {
+  //   for (let i = 0; i < 500; ++i) {
+  //     const msgs = await command.channel.messages.fetch({after: 923526829992714250, limit: 100});
+  //     await command.channel.bulkDelete(msgs);
+  //   }
 
-    await ReactThumbsUp(command.msg);
-    //922806469525659668
-  },
-};
+  //   await ReactThumbsUp(command.msg);
+  //   //922806469525659668
+  // },
+});
 
-const AudioCommands = {
-  "join": {
+const AudioCommands = expandCommands({
+  "join, j, connect": {
     func: async function(command, connection) {
       await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: false,
   },
-  "leave": {
+  "leave, dc, dis, disconnect": {
     func: async function(command, connection) {
       connection.Disconnect();
       await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: true,
   },
-  "play": {
+  "play, p, pl, pla": {
     func: async function(command, connection) {
       await connection.Queue(false, (await URLUtilities.ResolveSong(command.parameters)));
       await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: false,
   },
-  "play!": {
+  "play!, pl!, p!, pla!": {
     func: async function(command, connection) {
       await connection.Queue(true, (await URLUtilities.ResolveSong(command.parameters)));
       await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: false,
   },
-  "skip": {
+  "skip, sk, ski, s": {
     func: async function(command, connection) {
       let count = 1;
       if(command.splitText.length > 0 && !isNaN(command.splitText[0]))
@@ -69,7 +81,7 @@ const AudioCommands = {
     },
     requiresExistingConnection: true,
   },
-  "queue": {
+  "queue, qu, que, queu, q": {
     func: async function(command, connection) {
       let page = 1;
       if(command.splitText.length > 0 && !isNaN(command.splitText[0]))
@@ -78,19 +90,19 @@ const AudioCommands = {
     },
     requiresExistingConnection: true,
   },
-  "current": {
+  "current, cur, np, now": {
     func: async function(command, connection) {
       await SendEmbed(command.channel, "Playing:", connection.GetCurrent());
     },
     requiresExistingConnection: true,
   },
-  "pause": {
+  "pause, resume, pau, res, pu, rs": {
     func: async function(command, connection) {
       await SendEmbed(command.channel, connection.Pause(), "");
     },
     requiresExistingConnection: true,
   }
-};
+});
 
 const isCharNumber = (c) => c >= '0' && c <= '9';
 
