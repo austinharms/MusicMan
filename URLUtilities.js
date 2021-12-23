@@ -53,7 +53,7 @@ const resolveSong = async (input) => {
         const urlExperation = (parseInt(video.url.split("expire")[1].split("&")[0].substring(1)) - 10) * 1000;
         const song = {
           isYT: true,
-          url: videoInfo.video_url,
+          url: input,
           title: videoInfo.videoDetails.title,
           thumbnail: videoInfo.videoDetails.thumbnail.url,
           length: parseInt(videoInfo.videoDetails.lengthSeconds),
