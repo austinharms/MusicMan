@@ -6,8 +6,27 @@ let prefix = "~";
 
 const ServerlessCommands = {
   "help": async function(command) {
-    await SendEmbed(command.channel, "Help!", "this is the help page");
-  }
+    await SendEmbed(command.channel, "Help!", 
+    `***Commands:***
+    *Help*: Shows this message
+    *Join*:Join your VC
+    *Leave*: Disconnect from VC
+    *Play*: Play a song or add it to the queue
+    *Play!*: Play a song ignore the queue
+    *Skip*: Skip the current song
+    *Queue*: Show the current song queue
+    *Current*: Show the current song
+    *Pause*: Pause/Resume the current song`);
+  },
+  "bulkdel": async function(command) {
+    for (let i = 0; i < 500; ++i) {
+      const msgs = await command.channel.messages.fetch({after: 923526829992714250, limit: 100});
+      await command.channel.bulkDelete(msgs);
+    }
+
+    await ReactThumbsUp(command.msg);
+    //922806469525659668
+  },
 };
 
 const AudioCommands = {
@@ -17,7 +36,7 @@ const AudioCommands = {
     },
     requiresExistingConnection: false,
   },
-  "dc": {
+  "leave": {
     func: async function(command, connection) {
       connection.Disconnect();
       await ReactThumbsUp(command.msg);
@@ -27,6 +46,13 @@ const AudioCommands = {
   "play": {
     func: async function(command, connection) {
       await connection.Queue(false, (await URLUtilities.ResolveSong(command.parameters)));
+      await ReactThumbsUp(command.msg);
+    },
+    requiresExistingConnection: false,
+  },
+  "play!": {
+    func: async function(command, connection) {
+      await connection.Queue(true, (await URLUtilities.ResolveSong(command.parameters)));
       await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: false,
