@@ -85,6 +85,27 @@ AudioConnection.GetQueue = () => {
   }
 };
 
+AudioConnection.prototype.Clear = async function() {
+  try {
+    this.queue.length = 0;
+    await this.playNext();
+  } catch(e) {
+    if (e instanceof BotError.ErrorObject) throw e;
+    throw BotError(e,"Failed to Clear Queue", "AudioCon:Clear", this.guild.id, this.channel.id);
+  }
+};
+
+AudioConnection.prototype.Remove = async function(index) {
+  try {
+    --index;
+    if (this.queue.length < index) throw BotError(new Error("Index out of Range"),"Invalid Index", "AudioCon:Remove", this.guild.id, this.channel.id, -1, true);
+    this.queue.splice(index, 1);
+  } catch(e) {
+    if (e instanceof BotError.ErrorObject) throw e;
+    throw BotError(e,"Failed to Clear Queue", "AudioCon:Clear", this.guild.id, this.channel.id);
+  }
+};
+
 AudioConnection.prototype.Queue = async function(priority, songs) {
   try {
     if (priority) {

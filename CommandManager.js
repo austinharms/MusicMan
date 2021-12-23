@@ -81,6 +81,18 @@ const AudioCommands = expandCommands({
     },
     requiresExistingConnection: true,
   },
+  "rm, remove, del, rem, de": {
+    func: async function(command, connection) {
+      if(command.splitText.length <= 0 || isNaN(command.splitText[0]))
+        throw BotError(new Error("Failed to Parse Index"), "Invalid Index", "CmdMgr:remove", command.guild.id, command.channel.id, command.user.id, true);
+      const index = parseInt(command.splitText[0]);
+      if (index < 1 || index > connection.queue.length)
+        throw BotError(new Error("Index out of Range"), "Invalid Index", "CmdMgr:remove", command.guild.id, command.channel.id, command.user.id, true);
+      await connection.Remove(index);
+      await ReactThumbsUp(command.msg);
+    },
+    requiresExistingConnection: true,
+  },
   "queue, qu, que, queu, q": {
     func: async function(command, connection) {
       let page = 1;
@@ -93,6 +105,13 @@ const AudioCommands = expandCommands({
   "current, cur, np, now": {
     func: async function(command, connection) {
       await SendEmbed(command.channel, "Playing:", connection.GetCurrent());
+    },
+    requiresExistingConnection: true,
+  },
+  "clear, cl": {
+    func: async function(command, connection) {
+      await connection.Clear();
+      await ReactThumbsUp(command.msg);
     },
     requiresExistingConnection: true,
   },

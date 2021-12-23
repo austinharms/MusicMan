@@ -115,13 +115,11 @@ const createStreams = async function (song, base = 0) {
     }
 
     streams.request = req;
-    streams.id = 0;
     streams.destroy = (function() {
       this.transcoder.destroy();
       this.transcoder.end();
       this.request.destroy();
       this.request.end();
-      console.log("Streams Destroyed", this.id);
     }).bind(streams);
 
     return streams;
