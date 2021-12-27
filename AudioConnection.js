@@ -14,6 +14,8 @@ const AudioConnection = function(onDisconnect) {
   this.voiceConnection = null;
   this.onLevae = onDisconnect;
   this.paused = false;
+  this.loop = false;
+  this.loopQueue = false;
   this.boundDisconnect = this.Disconnect.bind(this);
   this.boundEnd = this.onEnd.bind(this);
   this.timeout = setTimeout(this.boundDisconnect, 10000);
@@ -95,6 +97,38 @@ AudioConnection.prototype.Clear = async function() {
   }
 };
 
+AudioConnection.prototype.Loop = function() {
+  try {
+    if (this.loop) {
+      this.loop = false;
+      return "Loop Disabled";
+    } else {
+      this.loop = true;
+      this.loopQueue = false;
+      return "Loop Enabled";
+    }
+  } catch(e) {
+    if (e instanceof BotError.ErrorObject) throw e;
+    throw BotError(e,"Failed to enable loop", "AudioCon:Loop", this.guild.id, this.channel.id);
+  }
+};
+
+AudioConnection.prototype.LoopQueue = function() {
+  try {
+    if (this.loopQueue) {
+      this.loopQueue = false;
+      return "Queue Loop Disabled";
+    } else {
+      this.loopQueue = true;
+      this.loop = false;
+      return "Queue Loop Enabled";
+    }
+  } catch(e) {
+    if (e instanceof BotError.ErrorObject) throw e;
+    throw BotError(e,"Failed to enable queue loop", "AudioCon:LoopQueue", this.guild.id, this.channel.id);
+  }
+};
+
 AudioConnection.prototype.Remove = async function(index) {
   try {
     --index;
@@ -159,8 +193,22 @@ AudioConnection.prototype.playNext = async function() {
 };
 
 AudioConnection.prototype.onEnd = async function() {
-  await this.playNext();
-  console.log("Song End");
+  try {
+    if (this.loop) { 
+      this.queue.unshift(this.current); 
+      this.queue[0].offset = 0;
+    } else if (this.loopQueue) {
+      this.queue.push(this.current); 
+      this.queue[this.queue.length - 1].offset = 0;
+    }
+
+    await this.playNext();
+    console.log("Song End: " + this.guild.id);
+  } catch(e) {
+    //Dont throw errors here just log them
+    if (!(e instanceof BotError.ErrorObject))
+      BotError(e,"Failed to End Song", "AudioCon:onEnd", this.guild.id, this.channel.id);
+  }
 };
 
 AudioConnection.prototype.GetQueue = function(page = 1) {
@@ -169,7 +217,7 @@ AudioConnection.prototype.GetQueue = function(page = 1) {
   page = Math.min(Math.max(page, 1), Math.ceil(this.queue.length/songsPerPage));
   queuePage = this.queue.slice((page - 1) * songsPerPage, page * songsPerPage);
   const queueString = queuePage.reduce((msg, song, index) => `${msg}${((page - 1) * songsPerPage) + (index + 1)}: [${song.title}](${song.url}), Duration: ${song.length}s\n`, "");
-  return `${queueString}\n*Page ${page}/${Math.ceil(this.queue.length/songsPerPage)}*`;
+  return `${queueString}\n*Page ${page}/${Math.ceil(this.queue.length/songsPerPage)}* ${this.loopQueue?"  (***Queue Looped***)":""}`;
 };
 
 AudioConnection.prototype.GetCurrent = function() {
@@ -183,7 +231,7 @@ AudioConnection.prototype.GetCurrent = function() {
   const played = Math.floor((((time - this.voiceStream.startTime) - this.voiceStream._pausedTime) - currentPauseTime)/1000)  + this.current.offset;
   const barFilled = Math.max(Math.min(Math.floor(played * barLength / this.current.length), barLength), 0);
   const progressBar = `[**${"=".repeat(barFilled)}${"-".repeat(barLength - barFilled)}**]`;
-  return `${this.current.title}\n${this.current.url}\n${progressBar}\nProgress: ${played}/${this.current.length}s\t${this.paused?"(***Paused***)":""}`;
+  return `${this.current.title}\n${this.current.url}\n${progressBar}\nProgress: ${played}/${this.current.length}s\t${this.paused?"  (***Paused***)":""}${this.loop?"  (***Looped***)":""}`;
 };
 
 AudioConnection.prototype.Pause = function() {

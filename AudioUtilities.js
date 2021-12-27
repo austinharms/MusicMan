@@ -122,6 +122,7 @@ const createStreams = async function (song, base = 0) {
       this.request.end();
     }).bind(streams);
 
+    streams.transcoder.on("error", (e) => BotError(e, "FFMpeg Error", "AudioUtil:transcoderError"));
     return streams;
   } catch (e) {
     if (e instanceof BotError.ErrorObject) throw e;

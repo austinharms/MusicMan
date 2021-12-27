@@ -28,17 +28,10 @@ const ServerlessCommands = expandCommands({
     *Skip*: Skip the current song
     *Queue*: Show the current song queue
     *Current*: Show the current song
-    *Pause*: Pause/Resume the current song`);
-  },
-  // "bulkdel": async function(command) {
-  //   for (let i = 0; i < 500; ++i) {
-  //     const msgs = await command.channel.messages.fetch({after: 923526829992714250, limit: 100});
-  //     await command.channel.bulkDelete(msgs);
-  //   }
-
-  //   await ReactThumbsUp(command.msg);
-  //   //922806469525659668
-  // },
+    *Pause*: Pause/Resume the current song
+    *Loop*: Loop the current song
+    *LoopQueue*: Loop the current queue of songs`);
+  }
 });
 
 const AudioCommands = expandCommands({
@@ -74,7 +67,7 @@ const AudioCommands = expandCommands({
       let count = 1;
       if(command.splitText.length > 0 && !isNaN(command.splitText[0]))
         count = parseInt(command.splitText[0]);
-      if (count < 1 || count > connection.queue.length)
+      if (count < 1 || count > connection.queue.length && count > 1)
         throw BotError(new Error("Index out of range"), "Invalid Skip Count", "CmdMgr:skip", command.guild.id, command.channel.id, command.user.id, true);
       await connection.Skip(count);
       await ReactThumbsUp(command.msg);
@@ -120,7 +113,19 @@ const AudioCommands = expandCommands({
       await SendEmbed(command.channel, connection.Pause(), "");
     },
     requiresExistingConnection: true,
-  }
+  },
+  "loop, l, loo, lo, repeat, rep, keep": {
+    func: async function(command, connection) {
+      await SendEmbed(command.channel, connection.Loop(), "");
+    },
+    requiresExistingConnection: true,
+  },
+  "loopqueue, lq, loopq, repeatqueue, repeatq, repq, keepqueue, keepq": {
+    func: async function(command, connection) {
+      await SendEmbed(command.channel, connection.LoopQueue(), "");
+    },
+    requiresExistingConnection: true,
+  },
 });
 
 const isCharNumber = (c) => c >= '0' && c <= '9';
@@ -140,7 +145,7 @@ const parseCommand = (msg) => {
     command.fullCommand = parts.shift();
     command.splitText = parts;
     command.parameters = command.splitText.join(" ").trim();
-    command.command = command.fullCommand.substring(prefix.length);
+    command.command = command.fullCommand.substring(prefix.length).toLowerCase();
     command.channelIndex = -1;
     if (isCharNumber(command.command.charAt(0))) {
       command.channelString = command.command.charAt(0);
