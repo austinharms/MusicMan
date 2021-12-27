@@ -20,17 +20,17 @@ const ServerlessCommands = expandCommands({
   "help, h, he, what, ?, how": async function(command) {
     await SendEmbed(command.channel, "Help!", 
     `***Commands:***
-    *Help*: Shows this message
-    *Join*: Join your VC
-    *Leave*: Disconnect from VC
-    *Play*: Play a song or add it to the queue
-    *Play!*: Play a song ignore the queue
-    *Skip*: Skip the current song
-    *Queue*: Show the current song queue
-    *Current*: Show the current song
-    *Pause*: Pause/Resume the current song
-    *Loop*: Loop the current song
-    *LoopQueue*: Loop the current queue of songs`);
+    **Help**: Shows this message
+    **Join**: Join your VC
+    **Leave**: Disconnect from VC
+    **Play**: Play a song or add it to the queue
+    **Play!**: Play a song ignore the queue
+    **Skip**: Skip the current song
+    **Queue**: Show the current song queue
+    **Current**: Show the current song
+    **Pause**: Pause/Resume the current song
+    **Loop**: Loop the current song
+    **LoopQueue**: Loop the current queue of songs`);
   }
 });
 
