@@ -21,7 +21,7 @@ const ServerlessCommands = expandCommands({
     await SendEmbed(command.channel, "Help!", 
     `***Commands:***
     *Help*: Shows this message
-    *Join*:Join your VC
+    *Join*: Join your VC
     *Leave*: Disconnect from VC
     *Play*: Play a song or add it to the queue
     *Play!*: Play a song ignore the queue
