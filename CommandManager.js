@@ -30,7 +30,8 @@ const ServerlessCommands = expandCommands({
     **Current**: Show the current song
     **Pause**: Pause/Resume the current song
     **Loop**: Loop the current song
-    **LoopQueue**: Loop the current queue of songs`);
+    **LoopQueue**: Loop the current queue of songs
+    **Clear**: Clear the queue and any playing song`);
   }
 });
 
@@ -101,7 +102,7 @@ const AudioCommands = expandCommands({
     },
     requiresExistingConnection: true,
   },
-  "clear, cl": {
+  "clear, cl, clearq, clearqueue": {
     func: async function(command, connection) {
       await connection.Clear();
       await ReactThumbsUp(command.msg);
