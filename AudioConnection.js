@@ -177,6 +177,15 @@ AudioConnection.prototype.playNext = async function() {
     if (this.queue.length > 0) {
       this.current = this.queue.shift();
       this.songStreams = await AudioUtilities.CreateStreams(this.current);
+      console.log(this.songStreams);
+      this.songStreams.onError = (async function() {
+        try {
+          await this.playNext();
+        } catch(e) {
+          if (!(e instanceof BotError.ErrorObject))
+            BotError(e, "Failed to Play Song", "AudioStreams:onError");
+        }
+      }).bind(this);
       this.voiceStream = this.voiceConnection.play(this.songStreams.transcoder, { volume: 0.5, type: "converted" });
       this.voiceStream.on("finish", this.boundEnd);
     } else {

@@ -3,9 +3,11 @@ const ytdl = require("ytdl-core");
 const ytpl = require("ytpl");
 const ytsr = require('ytsr');
 const isURL = new RegExp(/^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/gm);
-const HEADERS = {
-  cookie: process.env.YT_COOKIE,
-  "x-youtube-identity-token": process.env.YT_ID,
+const requestOptions = {
+  headers: {
+    cookie: process.env.YT_COOKIE,
+    "x-youtube-identity-token": process.env.YT_ID,
+  }
 };
 
 const resolveSong = async (input) => {
@@ -16,9 +18,7 @@ const resolveSong = async (input) => {
     if (validateURL(input)) {
       if (ytpl.validateID(input)) {
         return (await ytpl(input, {
-          requestOptions: {
-            headers: HEADERS,
-          },
+          requestOptions,
           limit: Infinity,
         })).items
         .filter(video => (!video.isLive) && video.isPlayable)
@@ -35,9 +35,7 @@ const resolveSong = async (input) => {
           }));
       } else if (ytdl.validateURL(input)) {
         const videoInfo = await ytdl.getInfo(input, {
-          requestOptions: {
-            headers: HEADERS,
-          },
+          requestOptions,
         });
 
         if (videoInfo.videoDetails.isPrivate)
@@ -85,7 +83,7 @@ const resolveSong = async (input) => {
           length: -1,
           offset: 0,
           playableURL: input,
-          urlExperation,
+          urlExperation: -1,
           type: "CHUNKED",
         }];
       }
@@ -95,7 +93,7 @@ const resolveSong = async (input) => {
         limit: 5,
         pages: 1,
       });
-      const video = res.items.find(i => i.type === "video" && !i.isUpcoming && !i.isLive && i.views > 0 && i.url);
+      const video = res.items.find(i => i.type === "video" && !i.isUpcoming && !i.isLive && i.url);
       if (!video)
         throw BotError(new Error("No Valid Videos in Search Results"), "Failed to Find a Video", "URLUtil:resolveSong:search");
 
@@ -112,9 +110,6 @@ const resolveSong = async (input) => {
         type: null,
       }];
     }
-
-    //Should Never Get Here
-    throw BotError(new Error("Fell Through Video Types (Should NEVER happen)"), "Failed to get Song", "URLUtil:resolveSong");
   } catch(e) {
     if (e instanceof BotError.ErrorObject) throw e;
     throw BotError(e, "Failed to get Song", "URLUtil:resolveSong");
@@ -126,9 +121,7 @@ const updatePlaybackURL = async (song) => {
     if (!song.isYT) return;
     if (song.playableURL === null || song.urlExperation <= Date.now()) {
       const videoInfo = await ytdl.getInfo(song.url, {
-        requestOptions: {
-          headers: HEADERS,
-        },
+        requestOptions,
       });
 
       if (videoInfo.videoDetails.isPrivate)
@@ -165,7 +158,7 @@ const updatePlaybackURL = async (song) => {
 };
 
 const getRequestHeaders = () => {
-  return Object.assign({}, HEADERS);
+  return Object.assign({}, requestOptions.headers);
 };
 
 const validateURL = (string) => {
