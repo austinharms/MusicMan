@@ -83,7 +83,7 @@ const resolveSong = async (input) => {
           length: -1,
           offset: 0,
           playableURL: input,
-          urlExperation: -1,
+          urlExperation: null,
           type: "CHUNKED",
         }];
       }

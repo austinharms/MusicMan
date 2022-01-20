@@ -7,6 +7,7 @@ const URLUtilities = require("./URLUtilities");
 const miniget = require("miniget");
 const FFmpeg = require("prism-media").FFmpeg;
 const m3u8stream = require("m3u8stream");
+const ReadableStream = require('stream').Readable;
 
 const dlChunkSize = 1024 * 1024 * 10;
 const baseRequestOptions = {
@@ -60,7 +61,7 @@ const createStreams = async function (song, base = 0) {
     const ffmpegArgs = [...baseArgs, "-af", `bass=g=${base}`, "-ss", `${song.offset}`];
 
     const streams = { 
-      transcoder: new FFmpeg({ args: ffmpegArgs }),
+      transcoder: new FFmpeg({ allowHalfOpen: false, args: ffmpegArgs }),
     };
 
     if (song.type === "STREAM") {
@@ -84,7 +85,20 @@ const createStreams = async function (song, base = 0) {
     } else { // if (song.type === "CHUNKED") { // Just assume it's chunked
       const ondata = (chunk) => {
         downloaded += chunk.length;
-        streams.transcoder.emit("progress", chunk.length, downloaded, contentLength);
+        // miniget downloads past the end sometimes, hack to stop this
+        if (contentLength != -1 && downloaded >= contentLength) {
+          req.unpipe(streams.transcoder);
+          const r = new ReadableStream();
+          r.push(null);
+          pipeAndSetEvents(r, streams.transcoder, true);
+          r.on("end", () => { 
+            r.destroy();
+          });
+          req.destroy();
+          req.end();
+        } else {
+          streams.transcoder.emit("progress", chunk.length, downloaded, contentLength);
+        }
       };
 
       let start = 0;
@@ -101,14 +115,16 @@ const createStreams = async function (song, base = 0) {
 
         req = miniget(song.playableURL, reqOptions);
         req.on("data", ondata);
-        req.on("end", () => {
+        const endFunc = () => {
           if (streams.transcoder.destroyed) return;
           if (end) {
             start = end + 1;
             end += dlChunkSize;
             getNextChunk();
           }
-        });
+        };
+        req.on("end", endFunc);
+        req.on("close", endFunc);
         pipeAndSetEvents(req, streams.transcoder, shouldEnd);
       };
       getNextChunk();
