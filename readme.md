@@ -1,5 +1,5 @@
 # Music Man
-## Formerly UtilityBot
+## A DiscordJS based Music Bot
 
 ## Requirements
 Runs in NodeJS version 16 or latter
