@@ -1,0 +1,17 @@
+{
+  "name": "musicman",
+  "version": "4.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "start": "ts-node bot.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.6.4",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
+  }
+}
