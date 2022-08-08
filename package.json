@@ -1,15 +1,21 @@
 {
-  "name": "musicman",
+  "name": "music-man",
   "version": "4.0.0",
   "description": "",
   "main": "bot.js",
   "scripts": {
-    "start": "ts-node bot.ts"
+    "build-ts-interface": "ts-interface-builder configuration.ts",
+    "dev": "npm run build-ts-interface && ts-node bot.ts",
+    "compile": "tsc --outDir build bot.ts",
+    "clean": "rm -rf build && rm ./*-ti.ts",
+    "build": "npm run clean && npm run build-ts-interface && npm run compile",
+    "start": "node build/bot.js"
   },
-  "author": "",
+  "author": "Austin Harms",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^18.6.4",
+    "ts-interface-builder": "^0.3.3",
     "ts-node": "^10.9.1",
     "tslib": "^2.4.0",
     "typescript": "^4.7.4"
@@ -18,8 +24,8 @@
     "@discordjs/opus": "^0.8.0",
     "@discordjs/voice": "^0.11.0",
     "discord.js": "^14.1.2",
-    "dotenv": "^16.0.1",
     "ffmpeg-static": "^5.0.2",
-    "sodium-native": "^3.3.0"
+    "sodium-native": "^3.3.0",
+    "ts-interface-checker": "^1.0.2"
   }
 }
