@@ -43,7 +43,9 @@ const createClient = async (token: string): Promise<Client> => {
                 ],
               });
 
-            console.warn(`Error running command: "${command.name}", Error: ${e}`);
+            console.warn(
+              `Error running command: "${command.name}", Error: ${e}`
+            );
           }
         } else {
           await chatInteraction.reply("Invalid Command");
