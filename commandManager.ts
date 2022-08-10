@@ -65,7 +65,7 @@ export const loadCommands = async () => {
         console.log(`Found Command File: ${file}`);
         try {
           const module: any = await import(file);
-          if (!module || !module.default) {
+          if (!module || !module.default || Object.keys(module.default).length === 0) {
             console.warn(`Invalid command file: ${file}, no default export`);
             return;
           }
