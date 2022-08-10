@@ -1,16 +1,16 @@
 import { ChatInputCommandInteraction } from "discord.js";
 import { Command } from "../command";
+import { createEmbed } from "../messageUtilities";
 
 const ping: Command = {
-    "name": "ping",
-    "description": "test command",
-    "run": async (interaction: ChatInputCommandInteraction) => {
-        await interaction.deferReply({ ephemeral: true }).then(console.log);
-        await interaction.followUp({ 
-            content: "Pong!",
-            ephemeral: false
-        });
-    }
+  name: "ping",
+  description: "test command",
+  run: async (interaction: ChatInputCommandInteraction) => {
+    await interaction.reply({
+      ephemeral: false,
+      embeds: [createEmbed("Ping", "Pong!")],
+    });
+  },
 };
 
 export default ping;

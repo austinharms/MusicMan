@@ -6,9 +6,9 @@ import { join } from "path";
 const configPath = join(__dirname, "config.json");
 
 export interface BotConfiguration {
-  clientId: string,
-  token: string
-};
+  clientId: string;
+  token: string;
+}
 
 export interface Configuration {
   dev: boolean;
@@ -16,6 +16,7 @@ export interface Configuration {
     bots: BotConfiguration[];
     devGuildId?: string;
   };
+  version: string;
 }
 
 const parseConfig = (): Configuration => {
@@ -40,7 +41,9 @@ const parseConfig = (): Configuration => {
 
     const loadedConfig = config as Configuration;
     if (loadedConfig.dev && !loadedConfig.discord.devGuildId)
-      console.log(`it is recommended to define "discord.devGuildId" when running in dev mode to update slash commands faster`);
+      console.log(
+        `it is recommended to define "discord.devGuildId" when running in dev mode to update slash commands faster`
+      );
 
     return loadedConfig;
   } catch (e: any) {
