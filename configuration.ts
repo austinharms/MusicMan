@@ -1,18 +1,24 @@
 import configurationTI from "./configuration-ti";
-import {createCheckers} from "ts-interface-checker";
+import { createCheckers } from "ts-interface-checker";
 import * as fs from "fs";
+import { join } from "path";
 
-const configPath = "./config.json";
+const configPath = join(__dirname, "config.json");
 
-export interface Configuration {
-  dev: boolean,
-  discord: {
-    tokens: string[],
-    devGuildId?: string
-  }
+export interface BotConfiguration {
+  clientId: string,
+  token: string
 };
 
-const parseConfig = () : Configuration => {
+export interface Configuration {
+  dev: boolean;
+  discord: {
+    bots: BotConfiguration[];
+    devGuildId?: string;
+  };
+}
+
+const parseConfig = (): Configuration => {
   if (!fs.existsSync(configPath)) {
     console.error(`Failed to find "${configPath}"`);
     console.log("Exiting...");
@@ -20,17 +26,28 @@ const parseConfig = () : Configuration => {
   }
 
   const { Configuration } = createCheckers(configurationTI);
-  const configString :string = fs.readFileSync(configPath).toString();
-  const config : object = JSON.parse(configString);
+  const configString: string = fs.readFileSync(configPath).toString();
   try {
-    Configuration.strictCheck(config);
-  } catch(e:any) {
-    console.error(`Invalid "${configPath}"`);
-    console.error(e.toString());
+    const config: object = JSON.parse(configString);
+    try {
+      Configuration.strictCheck(config);
+    } catch (e: any) {
+      console.error(`Invalid "${configPath}"`);
+      console.error(e.toString());
+      console.log("Exiting...");
+      process.exit(-1);
+    }
+
+    const loadedConfig = config as Configuration;
+    if (loadedConfig.dev && !loadedConfig.discord.devGuildId)
+      console.log(`it is recommended to define "discord.devGuildId" when running in dev mode to update slash commands faster`);
+
+    return loadedConfig;
+  } catch (e: any) {
+    console.error(`Invalid "${configPath}", Failed to parse JSON`);
     console.log("Exiting...");
     process.exit(-1);
   }
-  return config as Configuration;
 };
 
 export const config: Configuration = parseConfig();

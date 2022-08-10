@@ -1,27 +1,32 @@
 import { REST, Routes } from "discord.js";
 import commandTI from "./command-ti";
-import {createCheckers} from "ts-interface-checker";
+import { createCheckers } from "ts-interface-checker";
 import { Command, CommandName } from "./command";
+import { promises as fs, constants as fsConstants } from "fs";
+import { join } from "path";
+import { config } from "./configuration";
 
 type CommandEntry = {
-  [name: CommandName]: Command
+  [name: CommandName]: Command;
 };
 
-const registeredCommands : CommandEntry = {};
+const commandsPath: string = join(__dirname, "commands");
+const registeredCommands: CommandEntry = {};
+const loadedCommandFiles: string[] = [];
 
-export const validateCommand = (cmd: Command) : boolean => {
+export const validateCommand = (cmd: Command): boolean => {
   const { Command } = createCheckers(commandTI);
   try {
     Command.check(cmd);
     return true;
-  } catch(e: any) {
+  } catch (e: any) {
     console.warn(`Failed to validate command: ${cmd}`);
     console.warn(e.toString());
     return false;
   }
 };
 
-export const registerCommand = (cmd: Command) : boolean => {
+export const registerCommand = (cmd: Command): boolean => {
   if (!validateCommand(cmd)) {
     console.warn(`Failed to register invalid command object: ${cmd}`);
     return false;
@@ -37,6 +42,79 @@ export const registerCommand = (cmd: Command) : boolean => {
   return true;
 };
 
-export const pushSlashCommands = async () => {
-  const rest :REST = new REST({ version: '10' }).setToken('token');
+export const loadCommands = async () => {
+  const exits: boolean = await fs
+    .access(commandsPath, fsConstants.R_OK)
+    .then((): boolean => true)
+    .catch((): boolean => false);
+  if (!exits) {
+    console.warn(
+      `Failed to load commands, Failed to read "${commandsPath}" dir`
+    );
+    return;
+  }
+
+  const files: string[] = await fs.readdir(commandsPath);
+  await Promise.allSettled(
+    files
+      .filter(
+        (file: string): boolean => file.endsWith(".ts") || file.endsWith(".js")
+      )
+      .map(async (file: string): Promise<void> => {
+        file = join(commandsPath, file);
+        console.log(`Found Command File: ${file}`);
+        try {
+          const module: any = await import(file);
+          if (!module || !module.default) {
+            console.warn(`Invalid command file: ${file}, no default export`);
+            return;
+          }
+
+          const cmd: Command = module.default as Command;
+          registerCommand(cmd);
+        } catch (e: any) {
+          console.warn(`Failed to import command file: ${file}`);
+          console.warn(e.toString());
+        }
+
+        loadedCommandFiles.push(file);
+      })
+  );
+};
+
+export const publishSlashCommands = async () => {
+  try {
+    const rest: REST = new REST({ version: "10" }).setToken(
+      config.discord.bots[0].token
+    );
+
+    const body: any[] = Object.keys(registeredCommands).map(
+      (key: CommandName): any => ({
+        name: registeredCommands[key].name,
+        description: registeredCommands[key].description,
+      })
+    );
+
+    if (config.dev && config.discord.devGuildId) {
+      await rest.put(
+        Routes.applicationGuildCommands(
+          config.discord.bots[0].clientId,
+          config.discord.devGuildId
+        ),
+        {
+          body,
+        }
+      );
+    } else {
+      await rest.put(
+        Routes.applicationCommands(config.discord.bots[0].clientId),
+        {
+          body,
+        }
+      );
+    }
+  } catch (e: any) {
+    console.error("Failed to publish slash commands");
+    throw e;
+  }
 };
