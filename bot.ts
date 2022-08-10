@@ -1,6 +1,7 @@
 import { config } from "./configuration";
-import { loadCommands, publishSlashCommands } from "./commandManager";
+import { getCommand, loadCommands, publishSlashCommands } from "./commandManager";
 import { ChatInputCommandInteraction, Client, GatewayIntentBits, Interaction, MessageContextMenuCommandInteraction } from "discord.js";
+import { Command } from "./command";
 
 const createClient = async (token: string): Promise<Client> => {
     const client: Client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -16,10 +17,14 @@ const createClient = async (token: string): Promise<Client> => {
     //await publishSlashCommands();
     const client: Client = await createClient(config.discord.bots[0].token);
     client.on("interactionCreate",async (interaction: Interaction) => {
-        console.log(interaction);
         if (interaction.isChatInputCommand()) {
             const chatInteraction: ChatInputCommandInteraction = interaction as ChatInputCommandInteraction;
-            await chatInteraction.reply('Pong!');
+            const command: Command | null = getCommand(chatInteraction.commandName);
+            if (command !== null) {
+                 await command.run(chatInteraction);
+            } else {
+                await chatInteraction.reply('Invalid Command');
+            }
         }
     });
 })();

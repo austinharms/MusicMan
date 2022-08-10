@@ -82,6 +82,11 @@ export const loadCommands = async () => {
   );
 };
 
+export const getCommand = (name: CommandName): Command | null => {
+  if (registeredCommands.hasOwnProperty(name)) return registeredCommands[name];
+  return null;
+};
+
 export const publishSlashCommands = async () => {
   try {
     const rest: REST = new REST({ version: "10" }).setToken(
