@@ -1,10 +1,11 @@
 import { ChatInputCommandInteraction } from "discord.js";
+import { BotError } from "../BotError";
 import { Command } from "../command";
-import { createEmbed, createErrorEmbed } from "../messageUtilities";
+import { createEmbed, createBotErrorEmbed } from "../messageUtilities";
 import { Song } from "../song";
-import { getSongs, ResolveError } from "../songResolver";
+import { getSongs } from "../songResolver";
 
-const ping: Command = {
+const validate: Command = {
   name: "validate",
   description: "check if search is valid",
   options: [
@@ -28,17 +29,17 @@ const ping: Command = {
         interaction.options.get("song", true).value as string
       );
       await interaction.editReply({
-        embeds: [createEmbed("Validate", songs.reduce((acc: string, {title}: Song) => acc + title + "\n" , ""), songs[0].thumbnail)],
+        embeds: [createEmbed("Validate", songs.reduce((acc: string, { title }: Song) => acc + title + "\n", ""), songs[0].thumbnail?.href)],
       });
     } catch (e: any) {
-      const message: string =
-        (e instanceof ResolveError && e.userMessage) ||
-        "Failed to validate song";
+      if (!(e instanceof BotError))
+        e = new BotError(e, "Failed to validate song");
+
       await interaction.editReply({
-        embeds: [createErrorEmbed(message)],
+        embeds: [createBotErrorEmbed(e)]
       });
     }
   },
 };
 
-export default ping;
+export default validate;

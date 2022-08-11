@@ -1,4 +1,5 @@
 import { APIEmbed } from "discord.js";
+import { BotError } from "./BotError";
 import { config } from "./configuration";
 
 export const createEmbed = (title: string, content: string, image?: string) : APIEmbed => {
@@ -16,14 +17,18 @@ export const createEmbed = (title: string, content: string, image?: string) : AP
 };
 
 export const createErrorEmbed = (message: string) : APIEmbed => {
-    const embed: APIEmbed = {
-        title: "Error",
-        description: message,
-        color: 15158332,
-          footer: {
-            text: "Music Man - " + config.version
-          }
-    };
+  const embed: APIEmbed = {
+      title: "Error",
+      description: message,
+      color: 15158332,
+        footer: {
+          text: "Music Man - " + config.version
+        }
+  };
 
-    return embed;
+  return embed;
+};
+
+export const createBotErrorEmbed = (err: BotError) : APIEmbed => {
+  return createErrorEmbed(err.userMessage);
 };

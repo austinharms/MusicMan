@@ -12,11 +12,11 @@ export const enum Format {
 
 export interface Song {
     // the requested url
-    url: string;
+    url: URL;
     // the decoded(playable) url
-    playbackURL: string | null;
+    playbackURL: URL | null;
     // used for display embed
-    thumbnail?: string;
+    thumbnail?: URL;
     // title used for display
     title: string;
     // where the song came from
