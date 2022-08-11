@@ -93,13 +93,8 @@ export const publishSlashCommands = async () => {
       config.discord.bots[0].token
     );
 
-    const body: any[] = Object.keys(registeredCommands).map(
-      (key: CommandName): any => ({
-        name: registeredCommands[key].name,
-        description: registeredCommands[key].description,
-      })
-    );
-
+    // strip "run" from command object
+    const body: any[] = Object.values(registeredCommands).map(({ run, ...rest }: Command) => rest);
     if (config.dev && config.discord.devGuildId) {
       await rest.put(
         Routes.applicationGuildCommands(

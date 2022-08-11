@@ -5,6 +5,7 @@ import { createEmbed } from "../messageUtilities";
 const ping: Command = {
   name: "ping",
   description: "test command",
+  options: [],
   run: async (interaction: ChatInputCommandInteraction) => {
     await interaction.reply({
       ephemeral: false,
