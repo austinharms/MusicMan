@@ -19,6 +19,8 @@ import {
   Video as SearchVideo,
 } from "ytsr";
 import { BotError } from "./BotError";
+import { config } from "./configuration";
+import { url } from "inspector";
 
 export class ResolveError extends BotError {
   constructor(message: string | Error, userMessage?: string) {
@@ -59,7 +61,12 @@ export const getSongs = async (input: string): Promise<Song[]> => {
 export const getYTPlaylist = async (url: URL): Promise<Song[]> => {
   try {
     if (!validatePlaylistURL(url.href)) throw new ResolveError("getYTPlaylist Invalid YT Playlist URL", "Invalid playlist URL");
-    const playlist: PlaylistResult = await getPlaylist(url.href);
+    const playlist: PlaylistResult = await getPlaylist(url.href, {
+      limit: 250,
+      requestOptions: {
+        headers: config.yt.headers
+      }
+    });
     const songs: PlaylistSong[] = playlist.items;
     return songs.map((song: PlaylistSong): Song => ({
       url: new URL(song.url),
@@ -182,12 +189,12 @@ export const updateSong = async (song: Song): Promise<Song> => {
   switch (song.source) {
     case Source.YT:
       if (!song.playbackURL || song.expirationDate && song.expirationDate <= new Date(new Date().getTime() - 600000)) {
-        console.log("Update Video: " + song.url);
         return await getYTVideo(song.url);
       }
 
     case Source.ARBITRARY:
     default:
+      if (!song.playbackURL) song.playbackURL = song.url;
       return song;
   }
 };

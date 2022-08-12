@@ -3,12 +3,12 @@ import { createCheckers } from "ts-interface-checker";
 import * as fs from "fs";
 import { join } from "path";
 
-const configPath = join(__dirname, "config.json");
+export const CONFIG_PATH = join(__dirname, "config.json");
 
 export interface BotConfiguration {
   clientId: string;
   token: string;
-}
+};
 
 export interface Configuration {
   dev: boolean;
@@ -16,24 +16,27 @@ export interface Configuration {
     bots: BotConfiguration[];
     devGuildId?: string;
   };
+  yt: {
+    headers: { [key: string]: string };
+  };
   version: string;
-}
+};
 
 const parseConfig = (): Configuration => {
-  if (!fs.existsSync(configPath)) {
-    console.error(`Failed to find "${configPath}"`);
+  if (!fs.existsSync(CONFIG_PATH)) {
+    console.error(`Failed to find "${CONFIG_PATH}"`);
     console.log("Exiting...");
     process.exit(-1);
   }
 
   const { Configuration } = createCheckers(configurationTI);
-  const configString: string = fs.readFileSync(configPath).toString();
+  const configString: string = fs.readFileSync(CONFIG_PATH).toString();
   try {
     const config: object = JSON.parse(configString);
     try {
       Configuration.strictCheck(config);
     } catch (e: any) {
-      console.error(`Invalid "${configPath}"`);
+      console.error(`Invalid "${CONFIG_PATH}"`);
       console.error(e.toString());
       console.log("Exiting...");
       process.exit(-1);
@@ -47,7 +50,7 @@ const parseConfig = (): Configuration => {
 
     return loadedConfig;
   } catch (e: any) {
-    console.error(`Invalid "${configPath}", Failed to parse JSON`);
+    console.error(`Invalid "${CONFIG_PATH}", Failed to parse JSON`);
     console.log("Exiting...");
     process.exit(-1);
   }
