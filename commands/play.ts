@@ -1,5 +1,4 @@
-import { channel } from "diagnostics_channel";
-import { ChannelType, ChatInputCommandInteraction, GuildMember, VoiceChannel } from "discord.js";
+import { ChatInputCommandInteraction, GuildMember, VoiceChannel, ChannelType, GatewayIntentBits } from "discord.js";
 import { BotError } from "../BotError";
 import { Command } from "../command";
 import { createEmbed, createBotErrorEmbed } from "../messageUtilities";
@@ -10,6 +9,7 @@ import { getVoiceConnectionInterface, VoiceConnectionInterface } from "../voiceM
 const play: Command = {
   name: "play",
   description: "Play song in VC",
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
   options: [
     {
       type: 3,
@@ -32,7 +32,7 @@ const play: Command = {
       if (!member.voice.channel || member.voice.channel.type !== ChannelType.GuildVoice)
         throw new BotError("play command user not in voice channel", "You must be in a voice channel");
 
-      const voiceChannel: VoiceChannel = member.voice.channel;
+      const voiceChannel: VoiceChannel = member.voice.channel as VoiceChannel;
       if (!voiceChannel.joinable)
         throw new BotError("play command user voice channel not joinable", "Can not join voice channel");
       
@@ -40,7 +40,7 @@ const play: Command = {
       const songs: Song[] = await getSongs(
         interaction.options.get("song", true).value as string
       );
-      connectionInterface.queueSong(songs[0]);
+      await connectionInterface.queueSong(songs[0]);
       await interaction.editReply({
         embeds: [createEmbed("Play", songs.reduce((acc: string, { title }: Song) => acc + title + "\n", ""), songs[0].thumbnail?.href)],
       });

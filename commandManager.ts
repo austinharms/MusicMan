@@ -1,4 +1,4 @@
-import { REST, Routes } from "discord.js";
+import { GatewayIntentBits, REST, Routes } from "discord.js";
 import commandTI from "./command-ti";
 import { createCheckers } from "ts-interface-checker";
 import { Command, CommandName } from "./command";
@@ -65,7 +65,11 @@ export const loadCommands = async () => {
         console.log(`Found Command File: ${file}`);
         try {
           const module: any = await import(file);
-          if (!module || !module.default || Object.keys(module.default).length === 0) {
+          if (
+            !module ||
+            !module.default ||
+            Object.keys(module.default).length === 0
+          ) {
             console.warn(`Invalid command file: ${file}, no default export`);
             return;
           }
@@ -82,6 +86,14 @@ export const loadCommands = async () => {
   );
 };
 
+export const getCommandGatewayIntentBits = (): GatewayIntentBits[] => {
+  const allIntents: GatewayIntentBits[] = Object.values(registeredCommands)
+    .map((cmd: Command) => cmd.intents)
+    .flat();
+  // remove duplicates
+  return [...new Set(allIntents)];
+};
+
 export const getCommand = (name: CommandName): Command | null => {
   if (registeredCommands.hasOwnProperty(name)) return registeredCommands[name];
   return null;
@@ -93,8 +105,10 @@ export const publishSlashCommands = async () => {
       config.discord.bots[0].token
     );
 
-    // strip "run" from command object
-    const body: any[] = Object.values(registeredCommands).map(({ run, ...rest }: Command) => rest);
+    // strip "run" and "intents" from command object
+    const body: any[] = Object.values(registeredCommands).map(
+      ({ run, intents, ...rest }: Command) => rest
+    );
     if (config.dev && config.discord.devGuildId) {
       await rest.put(
         Routes.applicationGuildCommands(

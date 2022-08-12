@@ -3,6 +3,7 @@ import {
   getCommand,
   loadCommands,
   publishSlashCommands,
+  getCommandGatewayIntentBits,
 } from "./commandManager";
 import {
   ChatInputCommandInteraction,
@@ -14,7 +15,7 @@ import { Command } from "./command";
 import { createErrorEmbed } from "./messageUtilities";
 
 const createClient = async (token: string): Promise<Client> => {
-  const client: Client = new Client({ intents: [GatewayIntentBits.Guilds] });
+  const client: Client = new Client({ intents: getCommandGatewayIntentBits() });
   const ready: Promise<any> = new Promise((a) => client.on("ready", a));
   await client.login(token);
   console.log(`Bot "${client.user?.tag}" Ready`);

@@ -96,12 +96,13 @@ export const getYTVideo = async (url: URL): Promise<Song> => {
       throw new ResolveError(e, "Failed to load video, Invalid Format");
     }
 
+    const thumbnail: string | undefined = video.videoDetails.thumbnails.sort((b, a) => a.width * a.height - b.width * b.height)[0]?.url;
     const song: Song = {
       title: video.videoDetails.title,
       url: new URL(video.videoDetails.video_url),
       playbackURL: new URL(format.url),
       source: Source.YT,
-      thumbnail: video.videoDetails.thumbnails[0]?.url && new URL(video.videoDetails.thumbnails[0].url) || undefined,
+      thumbnail: thumbnail && new URL(thumbnail) || undefined,
       length: parseInt(video.videoDetails.lengthSeconds),
       size: parseInt(format.contentLength),
       live: format.isLive,
@@ -177,7 +178,7 @@ export const isURL = (testURL: string): boolean => {
   }
 };
 
-export const UpdateSong = async (song: Song): Promise<Song> => {
+export const updateSong = async (song: Song): Promise<Song> => {
   switch (song.source) {
     case Source.YT:
       if (!song.playbackURL || song.expirationDate && song.expirationDate <= new Date(new Date().getTime() - 600000)) {

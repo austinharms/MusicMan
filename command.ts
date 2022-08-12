@@ -1,6 +1,7 @@
 import {
   ChatInputCommandInteraction,
   ApplicationCommandOption,
+  GatewayIntentBits,
 } from "discord.js";
 
 export type CommandName = string;
@@ -20,4 +21,5 @@ export interface Command {
   description: string;
   run: (params: ChatInputCommandInteraction) => Promise<void>;
   options: CommandOption[];
+  intents: number[]; // can't be GatewayIntentBits due to ts-interface-builder not knowing the type
 }

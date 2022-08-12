@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, GatewayIntentBits } from "discord.js";
 import { BotError } from "../BotError";
 import { Command } from "../command";
 import { createEmbed, createBotErrorEmbed } from "../messageUtilities";
@@ -8,6 +8,7 @@ import { getSongs } from "../songResolver";
 const validate: Command = {
   name: "validate",
   description: "check if search is valid",
+  intents: [GatewayIntentBits.Guilds],
   options: [
     {
       type: 3,
