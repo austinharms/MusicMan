@@ -5,14 +5,10 @@ import {
   publishSlashCommands,
   getCommandGatewayIntentBits,
 } from "./commandManager";
-import {
-  ChatInputCommandInteraction,
-  Client,
-  GatewayIntentBits,
-  Interaction,
-} from "discord.js";
+import { ChatInputCommandInteraction, Client, Interaction } from "discord.js";
 import { Command } from "./command";
-import { createErrorEmbed } from "./messageUtilities";
+import { createBotErrorEmbed, createErrorEmbed } from "./messageUtilities";
+import { BotError } from "./BotError";
 
 const createClient = async (token: string): Promise<Client> => {
   const client: Client = new Client({ intents: getCommandGatewayIntentBits() });
@@ -37,25 +33,30 @@ const createClient = async (token: string): Promise<Client> => {
           try {
             await command.run(chatInteraction);
           } catch (e: any) {
+            if (!(e instanceof BotError))
+              e = new BotError(e, `Failed to run command "${command.name}"`);
             if (interaction.channel?.isTextBased())
               await interaction.channel.send({
-                embeds: [
-                  createErrorEmbed(`Failed to run command "${command.name}"`),
-                ],
+                embeds: [createBotErrorEmbed(e)],
               });
 
-            console.warn(
-              `Error running command: "${command.name}", Error: ${e}`
-            );
+            console.warn(e);
           }
         } else {
-          await chatInteraction.reply("Invalid Command");
+          await chatInteraction.reply({
+            embeds: [createErrorEmbed("Invalid Command")],
+          });
         }
       }
     } catch (e: any) {
-      console.error(
-        `Error processing interaction:\n${interaction}\nError:\n${e}`
-      );
+      if (!(e instanceof BotError))
+        e = new BotError(e, "Error processing command");
+      console.error(e);
+      if (interaction.channel?.isTextBased())
+        await interaction.channel
+          .send({
+            embeds: [createBotErrorEmbed(e)],
+          }).catch(() => {});
     }
   });
 })();
