@@ -113,6 +113,8 @@ export const getYTVideo = async (url: URL): Promise<Song> => {
       length: parseInt(video.videoDetails.lengthSeconds),
       size: parseInt(format.contentLength),
       live: format.isLive,
+      // this will get overwritten below if the song is a different format
+      format: Format.CHUNKED,
     };
 
     if (format.isHLS) song.format = Format.M3U8;
