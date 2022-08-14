@@ -29,6 +29,8 @@ export interface Song {
     size?: number;
     // is the content live(stream, radio)
     live?: boolean;
+    // needed for live content
+    itag?: number;
     // how should the song be played/downloaded
     format?: Format;
 };

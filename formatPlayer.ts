@@ -2,7 +2,7 @@ import EventEmitter from "events";
 import { Writable } from "stream";
 import { BotError } from "./BotError";
 import { Format, Song, Source } from "./song";
-import { default as m3u8stream } from "m3u8stream";
+import { default as m3u8stream, Options as M3U8Options } from "m3u8stream";
 import { config } from "./configuration";
 import { default as miniget, Options as MinigetOptions } from "miniget";
 
@@ -13,6 +13,12 @@ export const BASE_MINIGET_OPTIONS: miniget.Options = {
   maxRetries: 3,
   backoff: { inc: 500, max: 10000 },
   highWaterMark: 1024 * 512,
+};
+
+export const BASE_M3U8_OPTIONS: M3U8Options = {
+  chunkReadahead: 2000,
+  highWaterMark: 1024 * 512,
+  requestOptions: BASE_MINIGET_OPTIONS,
 };
 
 export declare interface FormatPlayer {
@@ -98,7 +104,7 @@ export class ChunkedFormatPlayer extends FormatPlayer {
         ...config.yt.headers,
       };
     }
-
+    
     this._minigetStream = miniget(song.playbackURL?.href as string, options);
     this._minigetStream.pipe(this._outputStream);
   }
@@ -112,6 +118,99 @@ export class ChunkedFormatPlayer extends FormatPlayer {
     // required to ensure buffered data is drained, prevents memory leak
     this._minigetStream?.read();
     this._minigetStream = undefined;
+  }
+}
+
+export class M3U8FormatPlayer extends FormatPlayer {
+  private _m3u8Stream?: m3u8stream.Stream;
+  private boundError: (...args: any[]) => void;
+
+  constructor(song: Song, stream: Writable) {
+    super(Format.M3U8, song, stream);
+    this.boundError = this.error.bind(this);
+    const options: M3U8Options = {
+      ...BASE_M3U8_OPTIONS,
+      id: song.itag?.toString(),
+      parser: "m3u8",
+      begin: 0,
+    };
+
+    if (song.live) options.begin = Date.now();
+    if (song.source === Source.YT) {
+      options.requestOptions = options.requestOptions || {};
+      options.requestOptions.headers = {
+        ...options.requestOptions.headers,
+        ...config.yt.headers,
+      };
+    }
+
+    this._m3u8Stream = m3u8stream(song.playbackURL?.href as string, options);
+    this._m3u8Stream.on("error", this.boundError);
+    this._m3u8Stream.pipe(this._outputStream);
+  }
+
+  private error(...args: any[]) {
+    this.emit("error", ...args);
+    this.destroy();
+  }
+
+  destroy(): void {
+    if (this.destroyed) return;
+    super.destroy();
+
+    this._m3u8Stream?.unpipe(this._outputStream);
+    this._m3u8Stream?.addListener("error", () => {});
+    this._m3u8Stream?.removeListener("error", this.boundError);
+    this._m3u8Stream?.destroy();
+    // required to ensure buffered data is drained, prevents memory leak
+    this._m3u8Stream?.read();
+    this._m3u8Stream = undefined;
+  }
+}
+
+export class DashMPDFormatPlayer extends FormatPlayer {
+  private _m3u8Stream?: m3u8stream.Stream;
+  private boundError: (...args: any[]) => void;
+
+  constructor(song: Song, stream: Writable) {
+    super(Format.DASH_MPD, song, stream);
+    this.boundError = this.error.bind(this);
+    const options: M3U8Options = {
+      ...BASE_M3U8_OPTIONS,
+      id: song.itag?.toString(),
+      parser: "dash-mpd",
+    };
+
+    if (song.live) options.begin = Date.now();
+    if (song.source === Source.YT) {
+      options.requestOptions = options.requestOptions || {};
+      options.requestOptions.headers = {
+        ...options.requestOptions.headers,
+        ...config.yt.headers,
+      };
+    }
+
+    this._m3u8Stream = m3u8stream(song.playbackURL?.href as string, options);
+    this._m3u8Stream.on("error", this.boundError);
+    this._m3u8Stream.pipe(this._outputStream);
+  }
+
+  private error(...args: any[]) {
+    this.emit("error", ...args);
+    this.destroy();
+  }
+
+  destroy(): void {
+    if (this.destroyed) return;
+    super.destroy();
+
+    this._m3u8Stream?.unpipe(this._outputStream);
+    this._m3u8Stream?.addListener("error", () => {});
+    this._m3u8Stream?.removeListener("error", this.boundError);
+    this._m3u8Stream?.destroy();
+    // required to ensure buffered data is drained, prevents memory leak
+    this._m3u8Stream?.read();
+    this._m3u8Stream = undefined;
   }
 }
 
@@ -130,6 +229,10 @@ export const createSongFormatPlayer = (
       return new ChunkedFormatPlayer(song, stream);
     case Format.ARBITRARY:
       return new ArbitraryFormatPlayer(song, stream);
+    case Format.DASH_MPD:
+      return new DashMPDFormatPlayer(song, stream);
+    case Format.M3U8:
+      return new M3U8FormatPlayer(song, stream);
     default:
       throw new BotError(
         "FormatPlayer song format was " + song.format,

@@ -32,7 +32,6 @@ const queue: Command = {
     // Don't need to wait for this to process the rest of the command
     const loadingReply: Promise<InteractionResponse<boolean>> =
       interaction.reply({
-        ephemeral: true,
         embeds: [createEmbed("Queue", "Loading...")],
       });
 
@@ -68,7 +67,7 @@ const queue: Command = {
 
       const SONGS_PER_PAGE: number = 20;
       const songs: Song[] = connectionInterface.queue;
-      const totalPageCount = Math.ceil(songs.length / SONGS_PER_PAGE);
+      const totalPageCount = Math.ceil(songs.length / SONGS_PER_PAGE) || 1;
       if (page < 1 || page > totalPageCount) {
         throw new BotError(
           "Queue command page out of range",

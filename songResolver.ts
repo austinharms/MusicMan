@@ -11,6 +11,7 @@ import {
   videoInfo as VideoInfo,
   chooseFormat as getVideoFormat,
   videoFormat as VideoFormat,
+  getInfoOptions as GetVideoOptions
 } from "ytdl-core";
 import {
   default as searchVideo,
@@ -86,7 +87,8 @@ export const getYTPlaylist = async (url: URL): Promise<Song[]> => {
 export const getYTVideo = async (url: URL): Promise<Song> => {
   try {
     if (!validateVideoURL(url.href)) throw new ResolveError("getYTVideo Invalid YT Video URL", "Invalid video URL");
-    const video: VideoInfo = await getVideo(url.href);
+    const options: GetVideoOptions = {requestOptions: { headers: config.yt.headers }};
+    const video: VideoInfo = await getVideo(url.href, options);
     if (video.videoDetails.isPrivate)
       throw new ResolveError(
         "Cannot Get Private Video",
@@ -123,7 +125,8 @@ export const getYTVideo = async (url: URL): Promise<Song> => {
       thumbnail: thumbnail && new URL(thumbnail) || undefined,
       length: parseInt(video.videoDetails.lengthSeconds),
       size: parseInt(format.contentLength),
-      live: format.isLive,
+      live: format.isLive && video.videoDetails.liveBroadcastDetails?.isLiveNow,
+      itag: format.itag,
       // this will get overwritten below if the song is a different format
       format: Format.CHUNKED,
     };

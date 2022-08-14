@@ -23,8 +23,7 @@ const remove: Command = {
     // Don't need to wait for this to process the rest of the command
     const loadingReply: Promise<InteractionResponse<boolean>> =
       interaction.reply({
-        ephemeral: true,
-        embeds: [createEmbed("Skip", "Loading...")],
+        embeds: [createEmbed("Stop", "Loading...")],
       });
 
     try {
