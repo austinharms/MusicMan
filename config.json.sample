@@ -1,0 +1,18 @@
+{
+    "dev": false,
+    "discord": {
+        "bots": [
+            {
+                "clientId": "Discord Client Id",
+                "token": "Discord bot token"
+            }
+        ],
+        "devGuildId": "GUILD ID"
+    },
+    "yt": {
+        "headers": {
+            "cookie": "YT request cookies",
+            "x-youtube-identity-token":"YT request identity token"
+        }
+    }
+}
