@@ -94,13 +94,24 @@ export const getYTVideo = async (url: URL): Promise<Song> => {
       );
 
     let format: VideoFormat | null = null;
-    try {
-      format = getVideoFormat(video.formats, {
-        quality: "highestaudio",
-        filter: "audioonly",
-      });
-    } catch (e: any) {
-      throw new ResolveError(e, "Failed to load video, Invalid Format");
+    if (video.videoDetails.isLiveContent)
+    {
+      try {
+        format = getVideoFormat(video.formats, {
+          quality: "highestaudio",
+        });
+      } catch (e: any) {
+        throw new ResolveError(e, "Failed to load video, Invalid Format");
+      }
+    } else {
+      try {
+        format = getVideoFormat(video.formats, {
+          quality: "highestaudio",
+          filter: "audioonly",
+        });
+      } catch (e: any) {
+        throw new ResolveError(e, "Failed to load video, Invalid Format");
+      }
     }
 
     const thumbnail: string | undefined = video.videoDetails.thumbnails.sort((b, a) => a.width * a.height - b.width * b.height)[0]?.url;

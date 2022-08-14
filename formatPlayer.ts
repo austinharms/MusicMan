@@ -132,7 +132,7 @@ export const createSongFormatPlayer = (
       return new ArbitraryFormatPlayer(song, stream);
     default:
       throw new BotError(
-        "FormatPlayer song format was undefined",
+        "FormatPlayer song format was " + song.format,
         "Failed to play song, Unknown format"
       );
   }
