@@ -127,9 +127,13 @@ export const createSongFormatPlayer = (
 
   switch (song.format) {
     case Format.CHUNKED:
-        return new ChunkedFormatPlayer(song, stream);
+      return new ChunkedFormatPlayer(song, stream);
     case Format.ARBITRARY:
-    default:
       return new ArbitraryFormatPlayer(song, stream);
+    default:
+      throw new BotError(
+        "FormatPlayer song format was undefined",
+        "Failed to play song, Unknown format"
+      );
   }
 };
