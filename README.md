@@ -17,7 +17,8 @@ Create a `config.json` base on `config.son.sample`
     * `headers`: headers to send when requesting yt videos
         * `cookie`: The cookies sent when getting a video, Required for restricted videos, can be found in the network tab in a web browser when loading a video under the cookies header  
         * `x-youtube-identity-token`: The user id used when getting a video, Required for restricted videos, can be found in the network tab in a web browser when loading a video under the x-youtube-identity-token  
-        
+
+Run `npm install` to install dependencies  
 Run `npm run build` to build a js version of the app in the `build` dir  
 Run `npm run start` to run Music Man!  
 ***Note**: you can also use `npm run dev` to run the bot using ts-node for type checking*

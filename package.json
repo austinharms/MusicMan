@@ -6,9 +6,8 @@
   "scripts": {
     "build-ts-interface": "ts-interface-builder configuration.ts command.ts",
     "dev": "npm run build-ts-interface && ts-node bot.ts",
-    "compile": "tsc --outDir build bot.ts",
     "clean": "rm -rf build && rm ./*-ti.ts",
-    "build": "npm run clean && npm run build-ts-interface && npm run compile",
+    "build": "npm run clean && npm run build-ts-interface && tsc && cp config.json build/config.json",
     "start": "node build/bot.js"
   },
   "author": "Austin Harms",
