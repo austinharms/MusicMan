@@ -100,7 +100,6 @@ export class SongStream {
     if (this._destroyed) return;
     this._destroyed = true;
 
-    console.log("Song Stream Destroyed");
     this._formatPlayer?.destroy();
     this._formatPlayer = undefined;
 

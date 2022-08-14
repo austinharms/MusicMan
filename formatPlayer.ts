@@ -52,7 +52,6 @@ export class FormatPlayer extends EventEmitter {
   destroy(): void {
     if (this._destroyed) return;
     this._destroyed = true;
-    console.log("Format Player Destroyed");
     this.emit("destroyed");
   }
 }
