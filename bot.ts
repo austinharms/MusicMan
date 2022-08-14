@@ -21,7 +21,7 @@ const createClient = async (token: string): Promise<Client> => {
 
 (async (): Promise<void> => {
   await loadCommands();
-  //await publishSlashCommands();
+  await publishSlashCommands();
   const client: Client = await createClient(config.discord.bots[0].token);
   client.on("interactionCreate", async (interaction: Interaction) => {
     try {

@@ -10,16 +10,18 @@ export interface CommandOption {
   type: number;
   name: string;
   required: boolean;
-  minLength: number;
-  maxLength: number;
+  minLength?: number;
+  maxLength?: number;
+  maxValue?: number;
+  minValue?: number;
   description: string;
-  options: CommandOption[];
+  options?: CommandOption[];
 }
 
 export interface Command {
   name: CommandName;
   description: string;
   run: (params: ChatInputCommandInteraction) => Promise<void>;
-  options: CommandOption[];
+  options?: CommandOption[];
   intents: number[]; // can't be GatewayIntentBits due to ts-interface-builder not knowing the type
 }

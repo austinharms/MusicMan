@@ -4,7 +4,7 @@ import { Command } from "../command";
 import { createEmbed, createBotErrorEmbed } from "../messageUtilities";
 import { Song } from "../song";
 import { getSongs } from "../songResolver";
-import { getVoiceConnectionInterface, VoiceConnectionInterface } from "../voiceManager";
+import { createVoiceConnectionInterface, VoiceConnectionInterface } from "../voiceManager";
 
 const play: Command = {
   name: "play",
@@ -18,7 +18,12 @@ const play: Command = {
       minLength: 3,
       maxLength: 4000,
       description: "URL or Search Input",
-      options: [],
+    },
+    {
+      type: 5,
+      name: "skip",
+      required: false,
+      description: "Add the songs at the front of the queue, default: false",
     },
   ],
   run: async (interaction: ChatInputCommandInteraction) => {
@@ -37,16 +42,24 @@ const play: Command = {
       if (!voiceChannel.joinable)
         throw new BotError("play command user voice channel not joinable", "Can not join voice channel");
 
-      const connectionInterface: VoiceConnectionInterface = await getVoiceConnectionInterface(voiceChannel);
+      const connectionInterface: VoiceConnectionInterface = await createVoiceConnectionInterface(voiceChannel);
       const songs: Song[] = await getSongs(
         interaction.options.get("song", true).value as string
       );
-      await connectionInterface.queueSong(songs);
+      const skip: boolean = interaction.options.getBoolean("skip", false) || false;
+      await connectionInterface.queueSong(songs, skip);
       // need to wait for reply before we can edit it
       await loadingReply;
-      await interaction.editReply({
-        embeds: [createEmbed("Play", songs.reduce((acc: string, { title }: Song) => acc + title + "\n", ""), songs[0].thumbnail?.href)],
-      });
+      if (songs.length < 10) {
+        await interaction.editReply({
+          embeds: [createEmbed("Play", songs.reduce((acc: string, { title }: Song) => acc + title + "\n", ""), songs[0].thumbnail?.href)],
+        });
+      } else {
+        const subSongs: Song[] = songs.slice(0, 10);
+        await interaction.editReply({
+          embeds: [createEmbed("Play", `${subSongs.reduce((acc: string, { title, url }: Song) => `${acc}[${title}](${url})\n`, "")}*+${songs.length - subSongs.length} more*`, songs[0].thumbnail?.href)],
+        });
+      }
     } catch (e: any) {
       if (!(e instanceof BotError))
         e = new BotError(e, "Failed to play song");
