@@ -99,33 +99,24 @@ export const getCommand = (name: CommandName): Command | null => {
   return null;
 };
 
-export const publishSlashCommands = async () => {
+export const publishSlashCommands = async (token: string, clientId: string) => {
   try {
-    const rest: REST = new REST({ version: "10" }).setToken(
-      config.discord.bots[0].token
-    );
-
+    const rest: REST = new REST({ version: "10" }).setToken(token);
     // strip "run" and "intents" from command object
     const body: any[] = Object.values(registeredCommands).map(
       ({ run, intents, ...rest }: Command) => rest
     );
     if (config.dev && config.discord.devGuildId) {
       await rest.put(
-        Routes.applicationGuildCommands(
-          config.discord.bots[0].clientId,
-          config.discord.devGuildId
-        ),
+        Routes.applicationGuildCommands(clientId, config.discord.devGuildId),
         {
           body,
         }
       );
     } else {
-      await rest.put(
-        Routes.applicationCommands(config.discord.bots[0].clientId),
-        {
-          body,
-        }
-      );
+      await rest.put(Routes.applicationCommands(clientId), {
+        body,
+      });
     }
   } catch (e: any) {
     console.error("Failed to publish slash commands");
