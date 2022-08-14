@@ -2,6 +2,7 @@ import configurationTI from "./configuration-ti";
 import { createCheckers } from "ts-interface-checker";
 import * as fs from "fs";
 import { join } from "path";
+import { default as VERSION_STRING } from "./version";
 
 export const CONFIG_PATH = join(__dirname, "config.json");
 
@@ -34,7 +35,8 @@ const parseConfig = (): Configuration => {
   const { Configuration } = createCheckers(configurationTI);
   const configString: string = fs.readFileSync(CONFIG_PATH).toString();
   try {
-    const config: object = JSON.parse(configString);
+    const config: any = JSON.parse(configString);
+    config.version = VERSION_STRING;
     try {
       Configuration.strictCheck(config);
     } catch (e: any) {
