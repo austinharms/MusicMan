@@ -8,7 +8,7 @@ export const CONFIG_PATH = join(__dirname, "config.json");
 export interface BotConfiguration {
   clientId: string;
   token: string;
-};
+}
 
 export interface Configuration {
   dev: boolean;
@@ -17,10 +17,12 @@ export interface Configuration {
     devGuildId?: string;
   };
   yt: {
-    headers: { [key: string]: string };
+    headers: {
+      [key: string]: string;
+    };
   };
   version: string;
-};
+}
 
 const parseConfig = (): Configuration => {
   if (!fs.existsSync(CONFIG_PATH)) {
@@ -44,8 +46,16 @@ const parseConfig = (): Configuration => {
 
     const loadedConfig = config as Configuration;
     if (loadedConfig.dev && !loadedConfig.discord.devGuildId)
-      console.log(
+      console.warn(
         `it is recommended to define "discord.devGuildId" when running in dev mode to update slash commands faster`
+      );
+
+    if (
+      !loadedConfig.yt.headers["x-youtube-identity-token"] ||
+      !loadedConfig.yt.headers["cookie"]
+    )
+      console.warn(
+        `to play restricted yt videos both "x-youtube-identity-token" and "cookie" must be defined under yt.headers in the config`
       );
 
     return loadedConfig;
