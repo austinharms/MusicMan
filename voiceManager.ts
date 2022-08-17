@@ -294,8 +294,7 @@ export class VoiceConnectionInterface {
     if (
       newState.status === AudioPlayerStatus.Idle &&
       oldState.status !== AudioPlayerStatus.Idle
-    )
-      this.onSongEnd(true).catch(console.warn);
+    ) this.onSongEnd(true).catch(console.warn);
   }
 
   private connectionStateChange(

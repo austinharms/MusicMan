@@ -99,7 +99,6 @@ export class SongStream {
   public destroy(): void {
     if (this._destroyed) return;
     this._destroyed = true;
-
     this._formatPlayer?.destroy();
     this._formatPlayer = undefined;
 
@@ -139,7 +138,6 @@ export class SongStream {
 
 export const createSongStream = async (song: Song): Promise<SongStream> => {
   try {
-    Format.ARBITRARY;
     const stream: SongStream = new SongStream(song);
     await stream.init();
     return stream;

@@ -82,7 +82,6 @@ export class ArbitraryFormatPlayer extends FormatPlayer {
   destroy(): void {
     if (this.destroyed) return;
     super.destroy();
-
     this._minigetStream?.unpipe(this._outputStream);
     this._minigetStream?.destroy();
     // required to ensure buffered data is drained, prevents memory leak
@@ -104,7 +103,7 @@ export class ChunkedFormatPlayer extends FormatPlayer {
         ...config.yt.headers,
       };
     }
-    
+
     this._minigetStream = miniget(song.playbackURL?.href as string, options);
     this._minigetStream.pipe(this._outputStream);
   }
@@ -150,6 +149,7 @@ export class M3U8FormatPlayer extends FormatPlayer {
   }
 
   private error(...args: any[]) {
+    console.log(args);
     this.emit("error", ...args);
     this.destroy();
   }

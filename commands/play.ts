@@ -51,7 +51,7 @@ const play: Command = {
       await loadingReply;
       if (songs.length < 10) {
         await interaction.editReply({
-          embeds: [createEmbed("Play", songs.reduce((acc: string, { title }: Song) => acc + title + "\n", ""), songs[0].thumbnail?.href)],
+          embeds: [createEmbed("Play", songs.reduce((acc: string, { title, url }: Song) => `${acc}[${title}](${url})\n`, ""), songs[0].thumbnail?.href)],
         });
       } else {
         const subSongs: Song[] = songs.slice(0, 10);
