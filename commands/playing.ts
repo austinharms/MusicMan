@@ -53,7 +53,7 @@ const queue: Command = {
       if (!current) {
         await loadingReply;
         await interaction.editReply({
-          embeds: [createEmbed("Playing", "Nothings playing\nUse `/play` to play something")],
+          embeds: [createEmbed("Playing", "**Nothings playing**\nUse `/play` to play something")],
         });
         return;
       }
@@ -67,16 +67,16 @@ const queue: Command = {
         const progressBar = `[${"x".repeat(BAR_LENGTH)}]`;
         await interaction.editReply({
           embeds: [createEmbed("Playing", `[${current.song.title}](${current.song.url})
-          *Played*: ${playedDuration} seconds ${current.resource.audioPlayer?.state.status == AudioPlayerStatus.Paused?"(*PAUSED*)":""}
-          ${progressBar}`, current.song.thumbnail?.href)],
+          ***Played***: ${playedDuration}*s* ${current.resource.audioPlayer?.state.status == AudioPlayerStatus.Paused?"(*PAUSED*)":""}
+          **${progressBar}**`, current.song.thumbnail?.href)],
         });
       } else {
         const filledAmount = Math.round(playedDuration/totalDuration * BAR_LENGTH);
         const progressBar = `[${"=".repeat(filledAmount)}${"-".repeat(BAR_LENGTH - filledAmount)}]`;
         await interaction.editReply({
           embeds: [createEmbed("Playing", `[${current.song.title}](${current.song.url})
-          *Duration*: ${playedDuration}/${totalDuration} seconds ${current.resource.audioPlayer?.state.status == AudioPlayerStatus.Paused?"(*PAUSED*)":""}
-          ${progressBar}`, current.song.thumbnail?.href)],
+          ***Played***: ${playedDuration}*s*/${totalDuration}*s* ${current.resource.audioPlayer?.state.status == AudioPlayerStatus.Paused?"(*PAUSED*)":""}
+          **${progressBar}**`, current.song.thumbnail?.href)],
         });
       }
     } catch (e: any) {
