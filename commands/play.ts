@@ -49,7 +49,7 @@ const play: Command = {
       await connectionInterface.queueSong(songs, skip);
       // need to wait for reply before we can edit it
       await loadingReply;
-      if (songs.length < 10) {
+      if (songs.length <= 10) {
         await interaction.editReply({
           embeds: [createEmbed("Play", songs.reduce((acc: string, { title, url }: Song) => `${acc}[${title}](${url})\n`, ""), songs[0].thumbnail?.href)],
         });
