@@ -49,38 +49,73 @@ const queue: Command = {
           "You must be in a bot voice channel"
         );
 
-      const current: SongStream | undefined = connectionInterface.getCurrentSongStream();
+      const current: SongStream | undefined =
+        connectionInterface.getCurrentSongStream();
       if (!current) {
         await loadingReply;
         await interaction.editReply({
-          embeds: [createEmbed("Playing", "**Nothings playing**\nUse `/play` to play something")],
+          embeds: [
+            createEmbed(
+              "Playing",
+              "**Nothings playing**\nUse `/play` to play something"
+            ),
+          ],
         });
         return;
       }
 
       const BAR_LENGTH: number = 20;
       const totalDuration: number = Math.round(current.song.length || 0);
-      const playedDuration: number = Math.round(current.resource.playbackDuration/1000);
+      const playedDuration: number = Math.round(
+        current.resource.playbackDuration / 1000
+      );
       // need to wait for reply before we can edit it
       await loadingReply;
       if (totalDuration === 0) {
         const progressBar = `[${"x".repeat(BAR_LENGTH)}]`;
         await interaction.editReply({
-          embeds: [createEmbed("Playing", `[${current.song.title}](${current.song.url})
-          ***Played***: ${playedDuration}*s* ${current.resource.audioPlayer?.state.status == AudioPlayerStatus.Paused?"(*PAUSED*)":""}
-          **${progressBar}**`, current.song.thumbnail?.href)],
+          embeds: [
+            createEmbed(
+              "Playing",
+              `[${current.song.title}](${current.song.url})
+          ***Played***: ${playedDuration}*s* ${
+                current.resource.audioPlayer?.state.status ===
+                AudioPlayerStatus.Paused
+                  ? "(*PAUSED*)"
+                  : ""
+              }
+          **${progressBar}**`,
+              current.song.thumbnail?.href
+            ),
+          ],
         });
       } else {
-        const filledAmount = Math.round(playedDuration/totalDuration * BAR_LENGTH);
-        const progressBar = `[${"=".repeat(filledAmount)}${"-".repeat(BAR_LENGTH - filledAmount)}]`;
+        const filledAmount = Math.round(
+          (playedDuration / totalDuration) * BAR_LENGTH
+        );
+        const progressBar = `[${"=".repeat(filledAmount)}${"-".repeat(
+          BAR_LENGTH - filledAmount
+        )}]`;
         await interaction.editReply({
-          embeds: [createEmbed("Playing", `[${current.song.title}](${current.song.url})
-          ***Played***: ${playedDuration}*s*/${totalDuration}*s* ${current.resource.audioPlayer?.state.status == AudioPlayerStatus.Paused?"(*PAUSED*)":""}
-          **${progressBar}**`, current.song.thumbnail?.href)],
+          embeds: [
+            createEmbed(
+              "Playing",
+              `[${current.song.title}](${current.song.url})
+          ***Played***: ${playedDuration}*s*/${totalDuration}*s* ${
+                current.resource.audioPlayer?.state.status ===
+                AudioPlayerStatus.Paused
+                  ? "(*PAUSED*)"
+                  : ""
+              }
+          **${progressBar}**`,
+              current.song.thumbnail?.href
+            ),
+          ],
         });
       }
     } catch (e: any) {
-      if (!(e instanceof BotError)) e = new BotError(e, "Failed to get current song");
+      if (!(e instanceof BotError))
+        e = new BotError(e, "Failed to get current song");
       // need to wait for reply before we can edit it
       await loadingReply;
       await interaction.editReply({

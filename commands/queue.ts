@@ -1,3 +1,4 @@
+import { AudioPlayerStatus } from "@discordjs/voice";
 import {
   ChatInputCommandInteraction,
   GuildMember,
@@ -10,6 +11,7 @@ import { BotError } from "../BotError";
 import { Command } from "../command";
 import { createEmbed, createBotErrorEmbed } from "../messageUtilities";
 import { Song } from "../song";
+import { SongStream } from "../songStream";
 import {
   getVoiceConnectionInterface,
   VoiceConnectionInterface,
@@ -55,9 +57,8 @@ const queue: Command = {
           "You must be in a bot voice channel"
         );
       const page: number = interaction.options.getInteger("page", false) || 1;
-      const current: Song | undefined =
-        connectionInterface.getCurrentSongStream()?.song;
-      if (!current) {
+      const current: SongStream | undefined = connectionInterface.getCurrentSongStream();
+      if (!current || !current.song) {
         await loadingReply;
         await interaction.editReply({
           embeds: [createEmbed("Queue", "Nothings here")],
@@ -101,15 +102,14 @@ const queue: Command = {
           embeds: [
             createEmbed(
               "Queue",
-              `***Now Playing***: [${current.title}](${
-                current.url
-              })\n***Queue***:\n ${pageSongs.reduce(
+              `***Now Playing***: [${current.song.title}](${current.song.url}) ${
+                current.resource.audioPlayer?.state.status === AudioPlayerStatus.Paused?"(*PAUSED*)":""
+              }
+              ***Queue***:\n ${pageSongs.reduce(
                 (acc: string, { title, url }: Song, i: number) =>
                   `${acc}   *${i + 1}*: [${title}](${url})\n`,
                 ""
-              )}\n *Page 1 of ${totalPageCount}*`,
-              current.thumbnail?.href
-            ),
+              )}\n *Page 1 of ${totalPageCount}*`),
           ],
         });
       }
