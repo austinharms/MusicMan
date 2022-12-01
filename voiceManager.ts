@@ -112,7 +112,9 @@ export class VoiceConnectionInterface {
       });
 
       this._connection.setSpeaking(false);
-      this._player = createAudioPlayer();
+      // AudioPlayer silently stops playback if you miss too many frames
+      // increase the max number of frames to allow for slow buffering songs
+      this._player = createAudioPlayer({ behaviors: { maxMissedFrames: 20 }});
       this._connection.subscribe(this._player);
       this._player.on("stateChange", this.boundPlayerStateChange);
       this.setIdleTimeout();
