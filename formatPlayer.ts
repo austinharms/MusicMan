@@ -93,9 +93,11 @@ export class ArbitraryFormatPlayer extends FormatPlayer {
 // TODO update this to request the data in "chunks"
 export class ChunkedFormatPlayer extends FormatPlayer {
   private _minigetStream?: miniget.Stream;
+  private boundError: (...args: any[]) => void;
 
   constructor(song: Song, stream: Writable) {
     super(Format.CHUNKED, song, stream);
+    this.boundError = this.error.bind(this);
     const options: MinigetOptions = { ...BASE_MINIGET_OPTIONS };
     if (song.source === Source.YT) {
       options.headers = {
@@ -105,7 +107,14 @@ export class ChunkedFormatPlayer extends FormatPlayer {
     }
 
     this._minigetStream = miniget(song.playbackURL?.href as string, options);
+    this._minigetStream.once("error", this.boundError);
     this._minigetStream.pipe(this._outputStream);
+  }
+
+  private error(...args: any[]) {
+    console.log(args);
+    this.emit("error", ...args);
+    this.destroy();
   }
 
   destroy(): void {
