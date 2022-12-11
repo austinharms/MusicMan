@@ -119,7 +119,7 @@ export const publishSlashCommands = async (token: string, clientId: string) => {
       });
     }
   } catch (e: any) {
-    console.error("Failed to publish slash commands");
+    console.error("Failed to publish slash commands", e);
     throw e;
   }
 };

@@ -9,7 +9,7 @@ export type CommandName = string;
 export interface CommandOption {
   type: number;
   name: string;
-  required: boolean;
+  required?: boolean;
   minLength?: number;
   maxLength?: number;
   maxValue?: number;
