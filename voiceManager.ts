@@ -100,6 +100,7 @@ export class VoiceConnectionInterface {
           adapterCreator: this._channel.guild.voiceAdapterCreator,
           selfDeaf: true,
           selfMute: false,
+          group: this._userId
         });
       }
 
