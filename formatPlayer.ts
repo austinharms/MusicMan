@@ -112,7 +112,6 @@ export class ChunkedFormatPlayer extends FormatPlayer {
 
     this._minigetStream = miniget(song.playbackURL?.href as string, options);
     this._minigetStream.once("error", this.boundError);
-    this._minigetStream.on("data", (...args) => console.log("Data", ...args));
     this._minigetStream.pipe(this._outputStream);
   }
 

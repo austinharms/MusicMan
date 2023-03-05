@@ -10,6 +10,7 @@ import {
   AudioPlayerState,
   AudioPlayerStatus,
   getVoiceConnection,
+  NoSubscriberBehavior,
 } from "@discordjs/voice";
 import { VoiceChannel } from "discord.js";
 import { BotError } from "./BotError";
@@ -104,6 +105,18 @@ export class VoiceConnectionInterface {
         });
       }
 
+      this._connection.on('stateChange', (oldState, newState) => {
+        const oldNetworking = Reflect.get(oldState, 'networking');
+        const newNetworking = Reflect.get(newState, 'networking');
+      
+        const networkStateChangeHandler = (oldNetworkState: any, newNetworkState: any) => {
+          const newUdp = Reflect.get(newNetworkState, 'udp');
+          clearInterval(newUdp?.keepAliveInterval);
+        }
+      
+        oldNetworking?.off('stateChange', networkStateChangeHandler);
+        newNetworking?.on('stateChange', networkStateChangeHandler);
+      });
       this._connection.once("error", this.boundDestroy);
       this._connection.on("stateChange", this.boundConnectionStateChange);
 
@@ -118,7 +131,8 @@ export class VoiceConnectionInterface {
       this._connection.setSpeaking(false);
       // AudioPlayer silently stops playback if you miss too many frames
       // increase the max number of frames to allow for slow buffering songs
-      this._player = createAudioPlayer({ behaviors: { maxMissedFrames: 20 }});
+      // Change NoSubscriberBehavior to Stop, so if the VoiceConnection stops the AudioResource is destroyed and not left in a undetermined state
+      this._player = createAudioPlayer({ behaviors: { maxMissedFrames: 20, noSubscriber: NoSubscriberBehavior.Stop }});
       this._connection.subscribe(this._player);
       this._player.on("stateChange", this.boundPlayerStateChange);
       this.setIdleTimeout();
