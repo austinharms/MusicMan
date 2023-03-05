@@ -9,7 +9,7 @@ Can play youtube videos(sound only) in discord voice channels, and supports mult
 Create a `config.json` base on `config.son.sample`  
 - `dev{boolean}`: log all errors to console and only update `discord.devGuildId` slash commands
 - `discord{object}`
-    * `bots(array)`: an array of discord bots to use
+    * `bots{array}`: an array of discord bots to use
         * `token{string}`: the token for the discord bot (used to login)
         * `clientId{string}`: the discord application clientId (used to update slash commands)
     * `devGuildId{string}`: used to only update a guild slash command when `dev` is `true`
