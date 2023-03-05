@@ -5,7 +5,7 @@ import {
   publishSlashCommands,
   getCommandGatewayIntentBits,
 } from "./commandManager";
-import { ChatInputCommandInteraction, Client, Interaction } from "discord.js";
+import { ChatInputCommandInteraction, Client, Interaction, TextChannel } from "discord.js";
 import { Command } from "./command";
 import { createBotErrorEmbed, createErrorEmbed } from "./messageUtilities";
 import { BotError } from "./BotError";
@@ -24,7 +24,7 @@ const processInteraction = async (interaction: Interaction): Promise<void> => {
           if (!(e instanceof BotError))
             e = new BotError(e, `Failed to run command "${command.name}"`);
           if (interaction.channel?.isTextBased())
-            await interaction.channel.send({
+            await (interaction.channel as TextChannel).send({
               embeds: [createBotErrorEmbed(e)],
             });
 
@@ -41,7 +41,7 @@ const processInteraction = async (interaction: Interaction): Promise<void> => {
       e = new BotError(e, "Error processing command");
     console.error(e);
     if (interaction.channel?.isTextBased())
-      await interaction.channel
+      await (interaction.channel as TextChannel)
         .send({
           embeds: [createBotErrorEmbed(e)],
         })

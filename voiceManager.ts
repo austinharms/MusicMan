@@ -14,6 +14,7 @@ import {
 import { VoiceChannel } from "discord.js";
 import { BotError } from "./BotError";
 import { createSongStream, SongStream } from "./songStream";
+import { config } from "./configuration";
 
 const connectionInterfaces: Map<
   string,
@@ -61,6 +62,8 @@ export class VoiceConnectionInterface {
       this._userId
     ) as Map<string, VoiceConnectionInterface>;
     map.set(this._channel.id, this);
+    if (config.dev)
+      console.log(`Created VoiceConnectionInterface: ${this}`);
   }
 
   async init(): Promise<void> {
@@ -118,6 +121,9 @@ export class VoiceConnectionInterface {
       this._connection.subscribe(this._player);
       this._player.on("stateChange", this.boundPlayerStateChange);
       this.setIdleTimeout();
+
+      if (config.dev)
+        console.log(`Init VoiceConnectionInterface: ${this}`);
     } catch (e: any) {
       this.destroy();
       if (e instanceof BotError) throw e;
@@ -147,6 +153,8 @@ export class VoiceConnectionInterface {
     ) as Map<string, VoiceConnectionInterface>;
     map.delete(this._channel.id);
     if (map.size === 0) connectionInterfaces.delete(this._userId);
+    if (config.dev)
+      console.log(`Destroyed VoiceConnectionInterface: ${this}`);
   }
 
   async queueSong(songs: Song[], front: boolean = false): Promise<void> {
@@ -253,6 +261,8 @@ export class VoiceConnectionInterface {
     // this is needed if an AudioPlayer event if emitted while a command is running
     if (this._pendingSongChange) return;
     this._pendingSongChange = true;
+    if (config.dev)
+      console.log(`VoiceConnectionInterface onSongEnd called`);
     while (true) {
       try {
         this.clearIdleTimeout();

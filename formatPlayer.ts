@@ -45,6 +45,8 @@ export class FormatPlayer extends EventEmitter {
     this._destroyed = false;
     this._song = song;
     this._outputStream = stream;
+    if (config.dev)
+      console.log(`Created FormatPlayer: ${this}`);
   }
 
   get song(): Song {
@@ -59,6 +61,8 @@ export class FormatPlayer extends EventEmitter {
     if (this._destroyed) return;
     this._destroyed = true;
     this.emit("destroyed");
+    if (config.dev)
+      console.log(`Destroyed FormatPlayer: ${this}`);
   }
 }
 
@@ -108,6 +112,7 @@ export class ChunkedFormatPlayer extends FormatPlayer {
 
     this._minigetStream = miniget(song.playbackURL?.href as string, options);
     this._minigetStream.once("error", this.boundError);
+    this._minigetStream.on("data", (...args) => console.log("Data", ...args));
     this._minigetStream.pipe(this._outputStream);
   }
 

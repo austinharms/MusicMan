@@ -8,6 +8,7 @@ import {
 } from "@discordjs/voice";
 import { BotError } from "./BotError";
 import { createSongFormatPlayer, FormatPlayer } from "./formatPlayer";
+import { config } from "./configuration";
 
 export const BASE_FFMPEG_ARGS: string[] = [
   "-analyzeduration",
@@ -43,6 +44,9 @@ export class SongStream {
     this._destroyed = false;
     this.options = options;
     this.boundError = this.error.bind(this);
+
+    if (config.dev)
+      console.log(`Created SongStream: ${this}`);
   }
 
   public async init(): Promise<void> {
@@ -76,6 +80,8 @@ export class SongStream {
       this._ffmpegStream.pipe(this._opusStream);
       this._formatPlayer = createSongFormatPlayer(this._song, this._ffmpegStream);
       this._formatPlayer.once("error", this.boundError);
+      if (config.dev)
+        console.log(`Init SongStream: ${this}`);
     } catch (e: any) {
       if (!(e instanceof BotError))
         e = new BotError(e, "Failed to create song stream");
@@ -128,6 +134,9 @@ export class SongStream {
       this._opusStream.read();
       this._opusStream = undefined;
     }
+
+    if (config.dev)
+      console.log(`Destroyed SongStream: ${this}`);
   }
 
   private error(e: any): void {
