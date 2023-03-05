@@ -23,6 +23,7 @@ const connectionInterfaces: Map<
 > = new Map<string, Map<string, VoiceConnectionInterface>>();
 
 export class VoiceConnectionInterface {
+  public looped: boolean;
   private _connection?: VoiceConnection;
   private _channel: VoiceChannel;
   private _userId: string;
@@ -43,6 +44,7 @@ export class VoiceConnectionInterface {
   private boundDestroy: () => void;
 
   constructor(channel: VoiceChannel) {
+    this.looped = false;
     this._channel = channel;
     this._userId = channel.client.user?.id as string;
     this._destroyed = false;
@@ -222,7 +224,7 @@ export class VoiceConnectionInterface {
           `Count out of range: min: 1, max: ${this._queue.length}`
         );
       if (count > 1) this._queue.splice(0, count - 1);
-      await this.onSongEnd(true);
+      await this.onSongEnd(true, true);
     } catch (e: any) {
       if (!(e instanceof BotError)) e = new BotError(e, "Failed to skip song");
       throw e;
@@ -232,7 +234,7 @@ export class VoiceConnectionInterface {
   async stopSongs(): Promise<void> {
     try {
       this._queue.length = 0;
-      await this.onSongEnd();
+      await this.onSongEnd(false, true);
     } catch (e: any) {
       if (!(e instanceof BotError))
         e = new BotError(e, "Failed to stop playing");
@@ -271,7 +273,7 @@ export class VoiceConnectionInterface {
     this._idleTimeout = undefined;
   }
 
-  private async onSongEnd(autoRetry: boolean = false): Promise<void> {
+  private async onSongEnd(autoRetry: boolean = false, ignoreLooped: boolean = false): Promise<void> {
     if (this._destroyed) return;
     // this is needed if an AudioPlayer event if emitted while a command is running
     if (this._pendingSongChange) return;
@@ -281,6 +283,8 @@ export class VoiceConnectionInterface {
     while (true) {
       try {
         this.clearIdleTimeout();
+        if (this._playing && this.looped && !ignoreLooped)
+          this._queue.push(this._playing.song);
         this._playing?.destroy();
         this._playing = undefined;
         if (this._queue.length === 0) {

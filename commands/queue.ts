@@ -104,7 +104,7 @@ const queue: Command = {
               "Queue",
               `***Now Playing***: [${current.song.title}](${current.song.url}) ${
                 current.resource.audioPlayer?.state.status === AudioPlayerStatus.Paused?"(*PAUSED*)":""
-              }
+              }${connectionInterface.looped ? "(*LOOPED*)" : ""}
               ***Queue***:\n ${pageSongs.reduce(
                 (acc: string, { title, url }: Song, i: number) =>
                   `${acc}   *${i + 1}*: [${title}](${url})\n`,

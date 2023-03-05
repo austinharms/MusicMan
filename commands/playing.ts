@@ -83,7 +83,7 @@ const queue: Command = {
                 AudioPlayerStatus.Paused
                   ? "(*PAUSED*)"
                   : ""
-              }
+              }${connectionInterface.looped ? "(*LOOPED*)" : ""}
           **${progressBar}**`,
               current.song.thumbnail?.href
             ),
@@ -106,7 +106,7 @@ const queue: Command = {
                 AudioPlayerStatus.Paused
                   ? "(*PAUSED*)"
                   : ""
-              }
+              }${connectionInterface.looped ? "(*LOOPED*)" : ""}
           **${progressBar}**`,
               current.song.thumbnail?.href
             ),
