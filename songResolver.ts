@@ -96,7 +96,17 @@ export const getYTVideo = async (url: URL): Promise<Song> => {
       );
 
     let format: VideoFormat | null = null;
-    if (video.videoDetails.isLiveContent)
+    if ((video.videoDetails as any).isLive && !video.videoDetails.isLiveContent) {
+      try {
+        format = getVideoFormat(video.formats, {
+          quality: "highestaudio",
+          filter: format => format.isHLS
+        });
+      } catch (e: any) {
+        throw new ResolveError(e, "Failed to load video, Invalid Format");
+      }
+    }
+    else if (video.videoDetails.isLiveContent)
     {
       try {
         format = getVideoFormat(video.formats, {
