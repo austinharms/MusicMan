@@ -12,7 +12,7 @@ import {
   getVoiceConnection,
   NoSubscriberBehavior,
 } from "@discordjs/voice";
-import { VoiceChannel } from "discord.js";
+import { VoiceChannel, VoiceState } from "discord.js";
 import { BotError } from "./BotError";
 import { createSongStream, SongStream } from "./songStream";
 import { config } from "./configuration";
@@ -41,6 +41,10 @@ export class VoiceConnectionInterface {
     oldSate: VoiceConnectionState,
     newState: VoiceConnectionState
   ) => void;
+  private boundVoiceStateUpdate: (
+    oldVoiceState: VoiceState,
+    newVoiceState: VoiceState
+  ) => Promise<void>;
   private boundDestroy: () => void;
 
   constructor(channel: VoiceChannel) {
@@ -55,6 +59,7 @@ export class VoiceConnectionInterface {
     this.boundPlayerStateChange = this.playerStateChange.bind(this);
     this.boundDestroy = this.destroy.bind(this);
     this.boundConnectionStateChange = this.connectionStateChange.bind(this);
+    this.boundVoiceStateUpdate = this.voiceStateUpdate.bind(this);
 
     if (!connectionInterfaces.has(this._userId))
       connectionInterfaces.set(
@@ -65,8 +70,7 @@ export class VoiceConnectionInterface {
       this._userId
     ) as Map<string, VoiceConnectionInterface>;
     map.set(this._channel.id, this);
-    if (config.dev)
-      console.log(`Created VoiceConnectionInterface: ${this}`);
+    if (config.dev) console.log(`Created VoiceConnectionInterface: ${this}`);
   }
 
   async init(): Promise<void> {
@@ -103,24 +107,28 @@ export class VoiceConnectionInterface {
           adapterCreator: this._channel.guild.voiceAdapterCreator,
           selfDeaf: true,
           selfMute: false,
-          group: this._userId
+          group: this._userId,
         });
       }
 
-      this._connection.on('stateChange', (oldState, newState) => {
-        const oldNetworking = Reflect.get(oldState, 'networking');
-        const newNetworking = Reflect.get(newState, 'networking');
-      
-        const networkStateChangeHandler = (oldNetworkState: any, newNetworkState: any) => {
-          const newUdp = Reflect.get(newNetworkState, 'udp');
+      this._connection.on("stateChange", (oldState, newState) => {
+        const oldNetworking = Reflect.get(oldState, "networking");
+        const newNetworking = Reflect.get(newState, "networking");
+
+        const networkStateChangeHandler = (
+          oldNetworkState: any,
+          newNetworkState: any
+        ) => {
+          const newUdp = Reflect.get(newNetworkState, "udp");
           clearInterval(newUdp?.keepAliveInterval);
-        }
-      
-        oldNetworking?.off('stateChange', networkStateChangeHandler);
-        newNetworking?.on('stateChange', networkStateChangeHandler);
+        };
+
+        oldNetworking?.off("stateChange", networkStateChangeHandler);
+        newNetworking?.on("stateChange", networkStateChangeHandler);
       });
       this._connection.once("error", this.boundDestroy);
       this._connection.on("stateChange", this.boundConnectionStateChange);
+      this._channel.client.on("voiceStateUpdate", this.boundVoiceStateUpdate);
 
       await entersState(
         this._connection,
@@ -134,13 +142,17 @@ export class VoiceConnectionInterface {
       // AudioPlayer silently stops playback if you miss too many frames
       // increase the max number of frames to allow for slow buffering songs
       // Change NoSubscriberBehavior to Stop, so if the VoiceConnection stops the AudioResource is destroyed and not left in a undetermined state
-      this._player = createAudioPlayer({ behaviors: { maxMissedFrames: 20, noSubscriber: NoSubscriberBehavior.Stop }});
+      this._player = createAudioPlayer({
+        behaviors: {
+          maxMissedFrames: 20,
+          noSubscriber: NoSubscriberBehavior.Stop,
+        },
+      });
       this._connection.subscribe(this._player);
       this._player.on("stateChange", this.boundPlayerStateChange);
       this.setIdleTimeout();
 
-      if (config.dev)
-        console.log(`Init VoiceConnectionInterface: ${this}`);
+      if (config.dev) console.log(`Init VoiceConnectionInterface: ${this}`);
     } catch (e: any) {
       this.destroy();
       if (e instanceof BotError) throw e;
@@ -153,6 +165,7 @@ export class VoiceConnectionInterface {
     this._destroyed = true;
     this.clearIdleTimeout();
     this.queue.length = 0;
+    this._channel.client.off("voiceStateUpdate", this.boundVoiceStateUpdate);
     this._playing?.destroy();
     this._playing = undefined;
     this._player?.removeListener("stateChange", this.boundPlayerStateChange);
@@ -170,8 +183,7 @@ export class VoiceConnectionInterface {
     ) as Map<string, VoiceConnectionInterface>;
     map.delete(this._channel.id);
     if (map.size === 0) connectionInterfaces.delete(this._userId);
-    if (config.dev)
-      console.log(`Destroyed VoiceConnectionInterface: ${this}`);
+    if (config.dev) console.log(`Destroyed VoiceConnectionInterface: ${this}`);
   }
 
   async queueSong(songs: Song[], front: boolean = false): Promise<void> {
@@ -273,13 +285,15 @@ export class VoiceConnectionInterface {
     this._idleTimeout = undefined;
   }
 
-  private async onSongEnd(autoRetry: boolean = false, ignoreLooped: boolean = false): Promise<void> {
+  private async onSongEnd(
+    autoRetry: boolean = false,
+    ignoreLooped: boolean = false
+  ): Promise<void> {
     if (this._destroyed) return;
     // this is needed if an AudioPlayer event if emitted while a command is running
     if (this._pendingSongChange) return;
     this._pendingSongChange = true;
-    if (config.dev)
-      console.log(`VoiceConnectionInterface onSongEnd called`);
+    if (config.dev) console.log(`VoiceConnectionInterface onSongEnd called`);
     while (true) {
       try {
         this.clearIdleTimeout();
@@ -318,6 +332,22 @@ export class VoiceConnectionInterface {
     }
   }
 
+  private async voiceStateUpdate(
+    oldVoiceState: VoiceState,
+    newVoiceState: VoiceState
+  ) {
+    if (this._destroyed || !this._connection) return;
+    if (
+      oldVoiceState.guild.id == this._channel.guild.id &&
+      (oldVoiceState.channelId == this._channel.id ||
+        newVoiceState.channelId == this._channel.id) &&
+      this._channel.members.size === 1
+    ) {
+      this._connection.disconnect();
+      if (config.dev) console.log("Bot voice channel empty disconnected bot");
+    }
+  }
+
   private playerStateChange(
     oldState: AudioPlayerState,
     newState: AudioPlayerState
@@ -325,17 +355,25 @@ export class VoiceConnectionInterface {
     if (
       newState.status === AudioPlayerStatus.Idle &&
       oldState.status !== AudioPlayerStatus.Idle
-    ) this.onSongEnd(true).catch(console.warn);
+    )
+      this.onSongEnd(true).catch(console.error);
   }
 
   private connectionStateChange(
-    oldSate: VoiceConnectionState,
+    oldState: VoiceConnectionState,
     newState: VoiceConnectionState
   ) {
     if (
       newState.status === VoiceConnectionStatus.Destroyed ||
       newState.status === VoiceConnectionStatus.Disconnected
     ) {
+      // Ensure the voice connection is not reconnected as we are destroying our reference to it
+      // This also "prevents" the bot from being moved, as the current codebase does not support that
+      if (
+        oldState.status !== VoiceConnectionStatus.Disconnected &&
+        newState.status === VoiceConnectionStatus.Disconnected
+      )
+        this._connection.disconnect();
       this._connection = undefined;
       this.destroy();
     }
