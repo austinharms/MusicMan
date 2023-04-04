@@ -1,12 +1,12 @@
 # Music Man
 #### A discord.js based Music Bot
-Can play youtube videos(sound only) in discord voice channels, and supports multiple bots at the same time!
+Can play YouTube videos(sound only) in discord voice channels, and supports multiple bots at the same time!
 
 ### Requirements
 - Node.js version 16 or later
 
 ## Getting Started
-Create a `config.json` base on `config.son.sample`  
+Create a `config.json` base on `config.json.sample`  
 - `dev{boolean}`: log all errors to console and only update `discord.devGuildId` slash commands
 - `discord{object}`
     * `bots{array}`: an array of discord bots to use
@@ -19,6 +19,7 @@ Create a `config.json` base on `config.son.sample`
         * `x-youtube-identity-token{string}`: The user id used when getting a video, Required for restricted videos, can be found in the network tab in a web browser when loading a video under the x-youtube-identity-token  
 
 Run `npm install` to install dependencies  
-Run `npm run build` to build a js version of the app in the `build` dir  
+Run `npm run build`* to build a js version of the app in the `build` dir  
 Run `npm run start` to run Music Man!  
-***Note**: you can also use `npm run dev` to run the bot using ts-node for type checking*
+You can also use `npm run dev`* to run the Music Man using `ts-node` for added type checking  
+***Note:** Commands marked with \* are not available in builds*
