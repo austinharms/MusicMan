@@ -371,7 +371,8 @@ export class VoiceConnectionInterface {
       // This also "prevents" the bot from being moved, as the current codebase does not support that
       if (
         oldState.status !== VoiceConnectionStatus.Disconnected &&
-        newState.status === VoiceConnectionStatus.Disconnected
+        newState.status === VoiceConnectionStatus.Disconnected &&
+        this._connection
       )
         this._connection.disconnect();
       this._connection = undefined;
