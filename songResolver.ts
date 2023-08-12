@@ -21,6 +21,7 @@ import {
 } from "ytsr";
 import { BotError } from "./BotError";
 import { config } from "./configuration";
+import { MinigetError } from "miniget";
 
 export class ResolveError extends BotError {
   constructor(message: string | Error, userMessage?: string) {
@@ -151,6 +152,8 @@ export const getYTVideo = async (url: URL): Promise<Song> => {
     return song;
   } catch (e: any) {
     if (e instanceof ResolveError) throw e;
+    if (e instanceof MinigetError && e.statusCode === 410)
+      e.message = `${e.message} (This may be because of invalid or outdated cookies in the config file)`;
     throw new ResolveError(e, "Failed to load video");
   }
 };
