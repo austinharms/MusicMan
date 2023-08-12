@@ -21,7 +21,6 @@ import {
 } from "ytsr";
 import { BotError } from "./BotError";
 import { config } from "./configuration";
-import { url } from "inspector";
 
 export class ResolveError extends BotError {
   constructor(message: string | Error, userMessage?: string) {
