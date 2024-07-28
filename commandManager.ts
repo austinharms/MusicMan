@@ -61,7 +61,7 @@ export const loadCommands = async () => {
         (file: string): boolean => file.endsWith(".ts") || file.endsWith(".js")
       )
       .map(async (file: string): Promise<void> => {
-        file = join(commandsPath, file);
+        file = join("file://", commandsPath, file);
         console.log(`Found Command File: ${file}`);
         try {
           const module: any = await import(file);
@@ -74,7 +74,7 @@ export const loadCommands = async () => {
             return;
           }
 
-          const cmd: Command = module.default as Command;
+          const cmd: Command = (module.default.default ? module.default.default : module.default) as Command;
           registerCommand(cmd);
         } catch (e: any) {
           console.warn(`Failed to import command file: ${file}`);
