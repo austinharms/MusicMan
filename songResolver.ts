@@ -12,7 +12,7 @@ import {
   chooseFormat as getVideoFormat,
   videoFormat as VideoFormat,
   getInfoOptions as GetVideoOptions
-} from "ytdl-core";
+} from "@distube/ytdl-core";
 import {
   default as searchVideo,
   Result as SearchResult,
