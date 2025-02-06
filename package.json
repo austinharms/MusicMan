@@ -7,7 +7,9 @@
     "build-ts-interface": "ts-interface-builder configuration.ts command.ts",
     "dev": "npm run build-ts-interface && ts-node bot.ts",
     "clean": "rm -rf build && rm -rf ./*-ti.ts",
-    "build": "npm run clean && npm run build-ts-interface && tsc && cp config.json build/config.json",
+    "clean:windows" : "del /f /q build && del /f /q configuration-ti.ts",
+    "build": "npm run build-ts-interface && tsc && cp config.json build/config.json",
+    "build:windows": "npm run clean:windows && npm run build-ts-interface && tsc && copy \"config.json\" \"build\\config.json\"",
     "start": "node build/bot.js"
   },
   "author": "Austin Harms",
@@ -22,6 +24,7 @@
   "dependencies": {
     "@discordjs/opus": "^0.9.0",
     "@discordjs/voice": "^0.16.0",
+    "@distube/ytdl-core": "^4.16.0",
     "discord.js": "^14.12.1",
     "ffmpeg-static": "^5.2.0",
     "m3u8stream": "^0.8.6",
@@ -29,7 +32,6 @@
     "prism-media": "^1.3.5",
     "sodium-native": "^4.0.4",
     "ts-interface-checker": "^1.0.2",
-    "ytdl-core": "github:austinharms/node-ytdl-core",
     "ytpl": "^2.3.0",
     "ytsr": "^3.8.4"
   }
